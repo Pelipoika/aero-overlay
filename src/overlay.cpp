@@ -63,9 +63,7 @@ overlay::overlay()
 	_title = random_string(64);
 }
 
-overlay::overlay(
-	overlay &&rhs
-) noexcept
+overlay::overlay(overlay &&rhs) noexcept
 {
 	*this = std::move(rhs);
 }
@@ -75,9 +73,7 @@ overlay::~overlay()
 	destroy();
 }
 
-overlay &overlay::operator =(
-	overlay &&rhs
-) noexcept
+overlay &overlay::operator =(overlay &&rhs) noexcept
 {
 	_class  = std::move(rhs._class);
 	_title  = std::move(rhs._title);
@@ -125,6 +121,7 @@ api_status overlay::attach(const std::uint32_t process_id)
 		            }
 		            return 1;
 	            },
+
 	            reinterpret_cast<LPARAM>(&data)
 	           );
 
@@ -280,9 +277,7 @@ void overlay::scale()
 	          );
 }
 
-void overlay::set_surface(
-	surface_ptr surface
-)
+void overlay::set_surface(surface_ptr surface)
 {
 	if (_surface)
 	{
@@ -292,12 +287,10 @@ void overlay::set_surface(
 	_surface = std::move(surface);
 }
 
-std::intptr_t overlay::window_proc(
-	void *               window_handle,
-	const std::uint32_t  message,
-	const std::uintptr_t wparam,
-	const std::intptr_t  lparam
-)
+std::intptr_t overlay::window_proc(void *               window_handle,
+                                   const std::uint32_t  message,
+                                   const std::uintptr_t wparam,
+                                   const std::intptr_t  lparam)
 {
 	auto *const hwnd = static_cast<HWND>(window_handle);
 	switch (message)
@@ -317,9 +310,7 @@ std::intptr_t overlay::window_proc(
 	return DefWindowProcA(hwnd, message, wparam, lparam);
 }
 
-constexpr const char *PIPE_NAME        = R"(\\.\pipe\CS2DebugOverlay)";
-constexpr auto        PIPE_BUFFER_SIZE = 512;
-
+#pragma pack(push, 1)
 enum class DrawCommandType : std::uint8_t
 {
 	LINE,
@@ -390,13 +381,17 @@ struct Packet
 		DrawCommandPacket drawCommand;
 	};
 };
+#pragma pack(pop)
+
+constexpr auto PIPE_NAME        = R"(\\.\pipe\CS2DebugOverlay)";
+constexpr auto PIPE_BUFFER_SIZE = sizeof(Packet);
 
 std::int32_t main()
 {
 	const auto overlay = std::make_unique<aero::overlay>();
 	const auto status  = overlay->attach("Counter-Strike 2");
 
-	if (status != aero::api_status::success)
+	if (status != api_status::success)
 	{
 		printf("[>] failed to create overlay: %u\n", static_cast<std::uint32_t>(status));
 		return -1;
@@ -440,15 +435,15 @@ std::int32_t main()
 	{
 		printf("Client: Attempting to connect to the pipe...\n");
 
-		HANDLE hPipe = CreateFileA(
-		                           PIPE_NAME,
-		                           GENERIC_READ,
-		                           0,
-		                           nullptr,
-		                           OPEN_EXISTING,
-		                           0,
-		                           nullptr
-		                          );
+		const HANDLE hPipe = CreateFileA(
+		                                 PIPE_NAME,
+		                                 GENERIC_READ,
+		                                 0,
+		                                 nullptr,
+		                                 OPEN_EXISTING,
+		                                 0,
+		                                 nullptr
+		                                );
 
 		if (hPipe != INVALID_HANDLE_VALUE)
 		{
@@ -457,14 +452,14 @@ std::int32_t main()
 
 			while (true)
 			{
-				DWORD dwRead   = 0;
-				BOOL  fSuccess = ReadFile(
-				                          hPipe,
-				                          buffer.data(),
-				                          static_cast<DWORD>(buffer.size()),
-				                          &dwRead,
-				                          nullptr
-				                         );
+				DWORD      dwRead   = 0;
+				const BOOL fSuccess = ReadFile(
+				                               hPipe,
+				                               buffer.data(),
+				                               static_cast<DWORD>(buffer.size()),
+				                               &dwRead,
+				                               nullptr
+				                              );
 
 				if (!fSuccess || dwRead == 0)
 				{
@@ -476,31 +471,32 @@ std::int32_t main()
 					{
 						fprintf(stderr, "Client: ReadFile failed, GLE=%lu\n", GetLastError());
 					}
+
 					break;
 				}
 
-				// Process packets in buffer
+				//Process packets in buffer
 				size_t offset = 0;
 				while (offset < dwRead)
 				{
 					if (dwRead - offset < sizeof(PacketType))
 						break; // Not enough data for even the type
 
-					PacketType type = *reinterpret_cast<PacketType*>(&buffer[offset]);
-					offset += sizeof(PacketType);
+					const Packet pkt = *reinterpret_cast<Packet*>(buffer.data());
 
-					switch (type)
+					switch (pkt.type)
 					{
 						case PacketType::DRAW_COMMAND:
 						{
 							if (dwRead - offset < sizeof(DrawCommandPacket))
 								break;
 
-							DrawCommandPacket cmd;
-							std::memcpy(&cmd, &buffer[offset], sizeof(DrawCommandPacket));
+							if (drawCommands.size() > 200)
+								drawCommands.pop_back();
+
+							DrawCommandPacket cmd = *reinterpret_cast<DrawCommandPacket*>(buffer.data() + sizeof(PacketType));
 							drawCommands.push_back(cmd);
 
-							offset += sizeof(DrawCommandPacket);
 							break;
 						}
 						case PacketType::WORLD_UPDATE:
@@ -508,7 +504,12 @@ std::int32_t main()
 							if (dwRead - offset < sizeof(WorldUpdatePacket))
 								break;
 
-							offset += sizeof(WorldUpdatePacket);
+							WorldUpdatePacket worldUpdate = *reinterpret_cast<WorldUpdatePacket*>(buffer.data() + sizeof(PacketType));
+
+							printf("viewAngles %.2f %.2f origin %.2f %.2f %.2f\n",
+							       worldUpdate.viewAngles.x, worldUpdate.viewAngles.y,
+							       worldUpdate.origin.x, worldUpdate.origin.y, worldUpdate.origin.z);
+
 							break;
 						}
 						case PacketType::CLEAR_ALL_DRAWINGS:
@@ -517,8 +518,13 @@ std::int32_t main()
 							break;
 						}
 						default:
+						{
+							fprintf(stderr, "Client: Unknown packet type %u\n", static_cast<std::uint8_t>(pkt.type));
 							break;
+						}
 					}
+
+					offset += sizeof(Packet);
 				}
 
 				if (surface->begin_scene())
