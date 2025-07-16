@@ -317,8 +317,79 @@ std::intptr_t overlay::window_proc(
 	return DefWindowProcA(hwnd, message, wparam, lparam);
 }
 
-#define PIPE_NAME "\\\\.\\pipe\\CS2DebugOverlay"
-#define BUFFER_SIZE 512
+constexpr const char *PIPE_NAME        = R"(\\.\pipe\CS2DebugOverlay)";
+constexpr auto        PIPE_BUFFER_SIZE = 512;
+
+enum class DrawCommandType : std::uint8_t
+{
+	LINE,
+	TEXT,
+};
+
+struct Vector
+{
+	float x, y, z;
+};
+
+struct QAngle
+{
+	float x, y, z;
+};
+
+struct Color
+{
+	std::uint8_t r, g, b, a;
+};
+
+struct LineCommandData
+{
+	Vector start;
+	Vector end;
+};
+
+struct TextCommandData
+{
+	Vector position;
+	bool   onscreen;
+	char   text[128];
+};
+
+struct DrawCommandPacket
+{
+	DrawCommandType type;
+	Color           color;
+	float           drawDuration;
+
+	union
+	{
+		LineCommandData line;
+		TextCommandData text;
+	};
+};
+
+struct WorldUpdatePacket
+{
+	QAngle viewAngles;
+	Vector origin;
+};
+
+enum class PacketType : std::uint8_t
+{
+	WORLD_UPDATE,
+	DRAW_COMMAND,
+	CLEAR_ALL_DRAWINGS
+};
+
+struct Packet
+{
+	PacketType type;
+
+	union
+	{
+		WorldUpdatePacket worldUpdate;
+		DrawCommandPacket drawCommand;
+	};
+};
 
 std::int32_t main()
 {
@@ -334,13 +405,34 @@ std::int32_t main()
 	const auto surface = overlay->get_surface();
 	const auto font    = surface->add_font("test", "Consolas", 12.f);
 
-	surface->add_callback([&surface, &font]{
-		surface->text(50.f, 50.f, font, 0xFFFFFFFF, "this is an example");
-		surface->line(50, 50, 500, 500, 0xFFFFFFFF);
+	// Drawing state
+	std::vector<DrawCommandPacket> drawCommands;
+
+	surface->add_callback([&surface, &font, &drawCommands]{
+		for (const auto &cmd : drawCommands)
+		{
+			switch (cmd.type)
+			{
+				case DrawCommandType::LINE:
+					surface->line(
+					              cmd.line.start.x, cmd.line.start.y,
+					              cmd.line.end.x, cmd.line.end.y,
+					              (cmd.color.r << 24) | (cmd.color.g << 16) | (cmd.color.b << 8) | cmd.color.a
+					             );
+					break;
+				case DrawCommandType::TEXT:
+					surface->text(
+					              cmd.text.position.x, cmd.text.position.y,
+					              font,
+					              (cmd.color.r << 24) | (cmd.color.g << 16) | (cmd.color.b << 8) | cmd.color.a,
+					              cmd.text.text
+					             );
+					break;
+			}
+		}
 	});
 
-	char  buffer[BUFFER_SIZE];
-	DWORD dwRead;
+	std::vector<uint8_t> buffer(PIPE_BUFFER_SIZE);
 
 	printf("Pipe Client: Connecting to pipe...\n");
 
@@ -365,13 +457,14 @@ std::int32_t main()
 
 			while (true)
 			{
-				BOOL fSuccess = ReadFile(
-				                         hPipe,
-				                         buffer,
-				                         sizeof(buffer) - 1,
-				                         &dwRead,
-				                         nullptr
-				                        );
+				DWORD dwRead   = 0;
+				BOOL  fSuccess = ReadFile(
+				                          hPipe,
+				                          buffer.data(),
+				                          static_cast<DWORD>(buffer.size()),
+				                          &dwRead,
+				                          nullptr
+				                         );
 
 				if (!fSuccess || dwRead == 0)
 				{
@@ -386,8 +479,47 @@ std::int32_t main()
 					break;
 				}
 
-				buffer[dwRead] = '\0';
-				printf("Client: Received -> %s\n", buffer);
+				// Process packets in buffer
+				size_t offset = 0;
+				while (offset < dwRead)
+				{
+					if (dwRead - offset < sizeof(PacketType))
+						break; // Not enough data for even the type
+
+					PacketType type = *reinterpret_cast<PacketType*>(&buffer[offset]);
+					offset += sizeof(PacketType);
+
+					switch (type)
+					{
+						case PacketType::DRAW_COMMAND:
+						{
+							if (dwRead - offset < sizeof(DrawCommandPacket))
+								break;
+
+							DrawCommandPacket cmd;
+							std::memcpy(&cmd, &buffer[offset], sizeof(DrawCommandPacket));
+							drawCommands.push_back(cmd);
+
+							offset += sizeof(DrawCommandPacket);
+							break;
+						}
+						case PacketType::WORLD_UPDATE:
+						{
+							if (dwRead - offset < sizeof(WorldUpdatePacket))
+								break;
+
+							offset += sizeof(WorldUpdatePacket);
+							break;
+						}
+						case PacketType::CLEAR_ALL_DRAWINGS:
+						{
+							drawCommands.clear();
+							break;
+						}
+						default:
+							break;
+					}
+				}
 
 				if (surface->begin_scene())
 				{
