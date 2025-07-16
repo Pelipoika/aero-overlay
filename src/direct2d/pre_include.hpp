@@ -17,24 +17,25 @@
 
 #include <aero-overlay/surface.hpp>
 
-namespace aero::detail {
-template<typename type>
-void safe_release(
-    type** data
-)
+namespace aero::detail
 {
-    static_assert( std::is_base_of_v<IUnknown, type> );
-    if( data && *data ) {
-        ( *data )->Release();
-        ( *data ) = nullptr;
-    }
-}
+	template <typename type>
+	void safe_release(
+		type **data
+	)
+	{
+		static_assert(std::is_base_of_v<IUnknown, type>);
+		if (data && *data)
+		{
+			(*data)->Release();
+			(*data) = nullptr;
+		}
+	}
 
-constexpr float round_float(
-    const float value
-)
-{
-    return static_cast<float>( static_cast<std::int32_t>( value ) );
-}
-
+	constexpr float round_float(
+		const float value
+	)
+	{
+		return static_cast<float>(static_cast<std::int32_t>(value));
+	}
 }

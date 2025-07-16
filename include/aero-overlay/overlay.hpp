@@ -7,88 +7,83 @@
 
 #include <aero-overlay/surface.hpp>
 
-namespace aero {
-
-class overlay final
+namespace aero
 {
-public:
-    overlay();
+	class overlay final
+	{
+	public:
+		overlay();
 
-    overlay(
-        const overlay&
-    ) = delete;
+		overlay(
+			const overlay &
+		) = delete;
 
-    overlay(
-        overlay&& rhs
-    ) noexcept;
+		overlay(
+			overlay &&rhs
+		) noexcept;
 
-    ~overlay();
+		~overlay();
 
-    overlay& operator = (
-        const overlay&
-    ) = delete;
+		overlay &operator =(
+			const overlay &
+		) = delete;
 
-    overlay& operator = (
-        overlay&& rhs
-    ) noexcept;
+		overlay &operator =(
+			overlay &&rhs
+		) noexcept;
 
-    api_status attach(
-        std::string_view window_title
-    );
+		api_status attach(
+			std::string_view window_title
+		);
 
-    api_status attach(
-        std::uint32_t process_id
-    );
+		api_status attach(
+			std::uint32_t process_id
+		);
 
-    api_status attach(
-        HWND target_window
-    );
+		api_status attach(
+			HWND target_window
+		);
 
-    void destroy();
+		void destroy();
 
-    _NODISCARD
-    bool message_loop() const noexcept;
+		bool message_loop() const noexcept;
 
-    void scale();
+		void scale();
 
-    void set_surface(
-        surface_ptr surface
-    );
+		void set_surface(
+			surface_ptr surface
+		);
 
-    _NODISCARD __forceinline
-    const std::string& get_class_name() const noexcept
-    {
-        return _class;
-    }
+		const std::string &get_class_name() const noexcept
+		{
+			return _class;
+		}
 
-    _NODISCARD __forceinline
-    const std::string& get_title() const noexcept
-    {
-        return _title;
-    }
+		const std::string &get_title() const noexcept
+		{
+			return _title;
+		}
 
-    _NODISCARD
-    surface_ptr get_surface() const noexcept
-    {
-        return _surface;
-    }
+		surface_ptr get_surface() const noexcept
+		{
+			return _surface;
+		}
 
-private:
-    static std::intptr_t __stdcall window_proc(
-        void*          window_handle,
-        std::uint32_t  message,
-        std::uintptr_t wparam,
-        std::intptr_t  lparam
-    );
+	private:
+		static std::intptr_t __stdcall window_proc(
+			void *         window_handle,
+			std::uint32_t  message,
+			std::uintptr_t wparam,
+			std::intptr_t  lparam
+		);
 
-private:
-    std::string   _class;
-    std::string   _title;
-    HWND          _window = nullptr;
-    HWND          _target = nullptr;
-    std::uint32_t _width  = 0;
-    std::uint32_t _height = 0;
-    surface_ptr   _surface;
-};
-
+	private:
+		std::string   _class;
+		std::string   _title;
+		HWND          _window = nullptr;
+		HWND          _target = nullptr;
+		std::uint32_t _width  = 0;
+		std::uint32_t _height = 0;
+		surface_ptr   _surface;
+	};
 }
