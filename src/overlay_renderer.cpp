@@ -57,7 +57,7 @@ void OverlayRenderer::EndFrame()
 	if (!m_initialized)
 		return;
 
-	RenderDebugInfo();
+	//RenderDebugInfo();
 	EndDrawing();
 }
 

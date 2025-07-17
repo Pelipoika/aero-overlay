@@ -8,7 +8,7 @@ namespace Config
 	constexpr auto TARGET_WINDOW_TITLE  = "Counter-Strike 2";
 
 	// Camera settings
-	constexpr float DEFAULT_FOV = 90.0f;
+	constexpr float DEFAULT_FOV = 75.0f;
 
 	// Pipe communication settings
 	constexpr auto PIPE_NAME                = R"(\\.\pipe\CS2DebugOverlay)";
