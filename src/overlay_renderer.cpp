@@ -1,0 +1,132 @@
+#include "overlay_renderer.h"
+#include "config.h"
+#include <iostream>
+
+OverlayRenderer::OverlayRenderer() : m_initialized(false) { }
+
+OverlayRenderer::~OverlayRenderer()
+{
+	Shutdown();
+}
+
+bool OverlayRenderer::Initialize(int width, int height, int x, int y)
+{
+	if (m_initialized)
+		return true;
+
+	SetConfigFlags(FLAG_WINDOW_TRANSPARENT | FLAG_WINDOW_MOUSE_PASSTHROUGH |
+	               FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TOPMOST |
+	               FLAG_WINDOW_UNFOCUSED | FLAG_WINDOW_ALWAYS_RUN);
+
+	InitWindow(width, height, Config::OVERLAY_WINDOW_TITLE);
+
+	if (!IsWindowReady())
+	{
+		std::cerr << "Failed to initialize raylib window" << '\n';
+		return false;
+	}
+
+	SetWindowSize(width, height);
+	SetWindowPosition(x, y);
+	SetTargetFPS(Config::TARGET_FPS);
+
+	m_initialized = true;
+	return true;
+}
+
+void OverlayRenderer::Shutdown()
+{
+	if (m_initialized)
+	{
+		CloseWindow();
+		m_initialized = false;
+	}
+}
+
+void OverlayRenderer::BeginFrame()
+{
+	if (!m_initialized)
+		return;
+
+	BeginDrawing();
+	ClearBackground(BLANK);
+}
+
+void OverlayRenderer::EndFrame()
+{
+	if (!m_initialized)
+		return;
+
+	RenderDebugInfo();
+	EndDrawing();
+}
+
+void OverlayRenderer::RenderCommands(const std::vector<DrawCommandPacket> &commands, const rlFPCamera &camera)
+{
+	if (!m_initialized)
+		return;
+
+	Render3DCommands(commands, camera);
+	Render2DCommands(commands, camera);
+}
+
+void OverlayRenderer::Render3DCommands(const std::vector<DrawCommandPacket> &commands, const rlFPCamera &camera)
+{
+	rlFPCameraBeginMode3D(&camera);
+
+	for (const auto &cmd : commands)
+	{
+		if (cmd.type == DrawCommandType::LINE)
+		{
+			DrawLine3D(cmd.line.start.ToRayLib(), cmd.line.end.ToRayLib(), cmd.color);
+		}
+	}
+
+	// Draw some debug geometry
+	DrawCylinder({-1114, -245, -1215},
+	             Config::DEBUG_CYLINDER_RADIUS,
+	             Config::DEBUG_CYLINDER_RADIUS,
+	             Config::DEBUG_CYLINDER_HEIGHT,
+	             Config::DEBUG_CYLINDER_SLICES,
+	             GREEN);
+
+	rlFPCameraEndMode3D();
+}
+
+void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &commands, const rlFPCamera &camera)
+{
+	for (const auto &cmd : commands)
+	{
+		if (cmd.type == DrawCommandType::TEXT)
+		{
+			if (cmd.text.onscreen)
+			{
+				DrawText(cmd.text.text,
+				         static_cast<int>(cmd.text.position.x),
+				         static_cast<int>(cmd.text.position.y),
+				         Config::DEBUG_TEXT_SIZE,
+				         cmd.color);
+			}
+			else
+			{
+				Vector2 screenPos = GetWorldToScreen(cmd.text.position.ToRayLib(), camera.ViewCamera);
+				DrawText(cmd.text.text,
+				         static_cast<int>(screenPos.x),
+				         static_cast<int>(screenPos.y),
+				         Config::DEBUG_TEXT_SIZE,
+				         cmd.color);
+			}
+		}
+	}
+}
+
+void OverlayRenderer::RenderDebugInfo()
+{
+	DrawText("Debug Overlay Active", 190, 200, Config::DEBUG_TEXT_SIZE, LIGHTGRAY);
+	DrawFPS(100, 100);
+}
+
+bool OverlayRenderer::ShouldClose() const
+{
+	return WindowShouldClose();
+}

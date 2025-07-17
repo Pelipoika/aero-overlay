@@ -34,7 +34,7 @@
 #include "raylib.h"
 #include "raymath.h"
 
-typedef enum
+using rlFPCameraControls = enum
 {
 	MOVE_FRONT = 0,
 	MOVE_BACK,
@@ -48,9 +48,9 @@ typedef enum
 	TURN_DOWN,
 	SPRINT,
 	LAST_CONTROL
-} rlFPCameraControls;
+};
 
-typedef struct
+using rlFPCamera = struct
 {
 	bool InvertY;
 
@@ -90,7 +90,7 @@ typedef struct
 	// note must use BeginModeFP3D and EndModeFP3D instead of BeginMode3D/EndMode3D for clipping planes to work
 	double NearPlane;
 	double FarPlane;
-} rlFPCamera;
+};
 
 // called to initialize a camera to default values
 RLAPI void rlFPCameraInit(rlFPCamera *camera, float fovY, Vector3 position);
