@@ -110,6 +110,17 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 			else
 			{
 				Vector2 screenPos = GetWorldToScreen(cmd.text.position.ToRayLib(), camera.ViewCamera);
+
+				const bool onScreen = (screenPos.x >= 0) && (screenPos.x < static_cast<float>(GetScreenWidth())) &&
+				                      (screenPos.y >= 0) && (screenPos.y < static_cast<float>(GetScreenHeight()));
+
+				Vector3 camForward = Vector3Subtract(camera.ViewCamera.target, camera.ViewCamera.position);
+				Vector3 toPoint    = Vector3Subtract(cmd.text.position.ToRayLib(), camera.ViewCamera.position);
+				bool    inFront    = Vector3DotProduct(camForward, toPoint) > 0;
+
+				if (!onScreen || !inFront)
+					continue;
+
 				DrawText(cmd.text.text,
 				         static_cast<int>(screenPos.x),
 				         static_cast<int>(screenPos.y),
