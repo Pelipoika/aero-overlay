@@ -60,7 +60,10 @@ void PipeClient::ExpireOldCommands()
 
 void PipeClient::PacketThreadWorker(const std::atomic<bool> &running, rlFPCamera &camera)
 {
-	std::vector<uint8_t> buffer(PIPE_BUFFER_SIZE);
+	// A persistent buffer to store incoming data from the pipe.
+	std::vector<uint8_t> buffer;
+	// A temporary buffer for each ReadFile call.
+	std::vector<uint8_t> read_buffer(PIPE_BUFFER_SIZE);
 
 	while (running)
 	{
@@ -77,15 +80,14 @@ void PipeClient::PacketThreadWorker(const std::atomic<bool> &running, rlFPCamera
 		if (hPipe != INVALID_HANDLE_VALUE)
 		{
 			printf("Client: Successfully connected to the pipe.\n");
-			printf("Client: Waiting to receive messages...\n");
 
 			while (running)
 			{
 				DWORD      dwRead   = 0;
 				const BOOL fSuccess = ReadFile(
 				                               hPipe,
-				                               buffer.data(),
-				                               static_cast<DWORD>(buffer.size()),
+				                               read_buffer.data(),
+				                               static_cast<DWORD>(read_buffer.size()),
 				                               &dwRead,
 				                               nullptr
 				                              );
@@ -100,26 +102,34 @@ void PipeClient::PacketThreadWorker(const std::atomic<bool> &running, rlFPCamera
 					{
 						fprintf(stderr, "Client: ReadFile failed, GLE=%lu\n", GetLastError());
 					}
-					break;
+					break; // Break inner loop to attempt reconnection
 				}
 
-				size_t offset = 0;
-				while (offset < dwRead)
-				{
-					if (dwRead - offset < sizeof(PacketType))
-						break;
+				// Append new data to our persistent buffer
+				buffer.insert(buffer.end(), read_buffer.begin(), read_buffer.begin() + dwRead);
 
-					auto pkt = reinterpret_cast<const Packet*>(buffer.data() + offset);
+				// Process all complete packets in the buffer
+				size_t offset = 0;
+				while (buffer.size() - offset >= sizeof(Packet))
+				{
+					const auto *pkt = reinterpret_cast<const Packet*>(buffer.data() + offset);
 					ProcessPacket(pkt, camera);
 					offset += sizeof(Packet);
 				}
 
-				std::this_thread::sleep_for(std::chrono::milliseconds(Config::PIPE_READ_DELAY_MS));
+				// If we processed any packets, remove them from the buffer.
+				// Any remaining data is an incomplete packet that will be processed
+				// after the next ReadFile call.
+				if (offset > 0)
+				{
+					buffer.erase(buffer.begin(), buffer.begin() + offset);
+				}
 			}
 			CloseHandle(hPipe);
 		}
 		else
 		{
+			// Wait before retrying connection
 			fprintf(stderr, "Client: Could not open pipe, GLE=%lu. Retrying in %d seconds...\n",
 			        GetLastError(), Config::PIPE_RETRY_DELAY_SECONDS);
 			std::this_thread::sleep_for(std::chrono::seconds(Config::PIPE_RETRY_DELAY_SECONDS));
