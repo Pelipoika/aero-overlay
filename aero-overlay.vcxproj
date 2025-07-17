@@ -114,12 +114,14 @@
       <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <PreprocessorDefinitions>PLATFORM_DESKTOP;GRAPHICS_API_OPENGL_33;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>dwmapi.lib;d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dwmapi.lib;d3d9.lib;raylib.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -154,6 +156,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PreprocessorDefinitions>PLATFORM_DESKTOP;GRAPHICS_API_OPENGL_33;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -163,21 +166,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\direct2d\d2d_font.cpp" />
-    <ClCompile Include="src\direct2d\d2d_surface.cpp" />
+    <ClCompile Include="src\rlFPSCamera.cpp" />
     <ClCompile Include="src\overlay.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\aero-overlay\core\api_status.hpp" />
-    <ClInclude Include="include\aero-overlay\core\color.hpp" />
-    <ClInclude Include="include\aero-overlay\core\requirements.hpp" />
-    <ClInclude Include="include\aero-overlay\font.hpp" />
-    <ClInclude Include="include\aero-overlay\overlay.hpp" />
-    <ClInclude Include="include\aero-overlay\surface.hpp" />
-    <ClInclude Include="src\direct2d\d2d_font.hpp" />
-    <ClInclude Include="src\direct2d\d2d_surface.hpp" />
-    <ClInclude Include="src\direct2d\pre_include.hpp" />
-    <ClInclude Include="src\utils\string_converter.hpp" />
+    <ClInclude Include="include\raylib.h" />
+    <ClInclude Include="include\raymath.h" />
+    <ClInclude Include="include\rlgl.h" />
+    <ClInclude Include="include\rlFPSCamera.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,314 +1,87 @@
-///--------------------------------------------------------------------------------
-///-- Author        ReactiioN
-///-- Copyright     2016-2020, ReactiioN
-///-- License       MIT
-///--------------------------------------------------------------------------------
-#include <chrono>
-#include <aero-overlay/overlay.hpp>
-#include <dwmapi.h>
-#include <random>
-#include <thread>
+#if defined(_WIN32)
+// To avoid conflicting windows.h symbols with raylib, some flags are defined
+// WARNING: Those flags avoid inclusion of some Win32 headers that could be required
+// by user at some point and won't be included...
+//-------------------------------------------------------------------------------------
 
-#include "direct2d/d2d_surface.hpp"
-using namespace aero;
+// If defined, the following flags inhibit definition of the indicated items.
+#define NOGDICAPMASKS     // CC_*, LC_*, PC_*, CP_*, TC_*, RC_
+#define NOVIRTUALKEYCODES // VK_*
+#define NOWINMESSAGES     // WM_*, EM_*, LB_*, CB_*
+#define NOWINSTYLES       // WS_*, CS_*, ES_*, LBS_*, SBS_*, CBS_*
+#define NOSYSMETRICS      // SM_*
+#define NOMENUS           // MF_*
+#define NOICONS           // IDI_*
+#define NOKEYSTATES       // MK_*
+#define NOSYSCOMMANDS     // SC_*
+#define NORASTEROPS       // Binary and Tertiary raster ops
+#define NOSHOWWINDOW      // SW_*
+#define OEMRESOURCE       // OEM Resource values
+#define NOATOM            // Atom Manager routines
+#define NOCLIPBOARD       // Clipboard routines
+#define NOCOLOR           // Screen colors
+#define NOCTLMGR          // Control and Dialog routines
+#define NODRAWTEXT        // DrawText() and DT_*
+#define NOGDI             // All GDI defines and routines
+#define NOKERNEL          // All KERNEL defines and routines
+#define NOUSER            // All USER defines and routines
+#define NONLS             // All NLS defines and routines
+#define NOMB              // MB_* and MessageBox()
+#define NOMEMMGR          // GMEM_*, LMEM_*, GHND, LHND, associated routines
+#define NOMETAFILE        // typedef METAFILEPICT
+#define NOMINMAX          // Macros min(a,b) and max(a,b)
+#define NOMSG             // typedef MSG and associated routines
+#define NOOPENFILE        // OpenFile(), OemToAnsi, AnsiToOem, and OF_*
+#define NOSCROLL          // SB_* and scrolling routines
+#define NOSERVICE         // All Service Controller routines, SERVICE_ equates, etc.
+#define NOSOUND           // Sound driver routines
+#define NOTEXTMETRIC      // typedef TEXTMETRIC and associated routines
+#define NOWH              // SetWindowsHook and WH_*
+#define NOWINOFFSETS      // GWL_*, GCL_*, associated routines
+#define NOCOMM            // COMM driver routines
+#define NOKANJI           // Kanji support stuff.
+#define NOHELP            // Help engine interface.
+#define NOPROFILER        // Profiler interface.
+#define NODEFERWINDOWPOS  // DeferWindowPos routines
+#define NOMCX             // Modem Configuration Extensions
+#define NOPLAYSOUND
 
-template <typename type = RECT>
-static type get_window_props(HWND hwnd)
+// Type required before windows.h inclusion
+typedef struct tagMSG *LPMSG;
+
+#include <windows.h>
+
+#undef PlaySound // Avoid conflict with PlaySound() function defined in windows.h
+
+// Type required by some unused function...
+typedef struct tagBITMAPINFOHEADER
 {
-	RECT client{}, window{};
-	GetClientRect(hwnd, &client);
-	GetWindowRect(hwnd, &window);
+	DWORD biSize;
+	LONG  biWidth;
+	LONG  biHeight;
+	WORD  biPlanes;
+	WORD  biBitCount;
+	DWORD biCompression;
+	DWORD biSizeImage;
+	LONG  biXPelsPerMeter;
+	LONG  biYPelsPerMeter;
+	DWORD biClrUsed;
+	DWORD biClrImportant;
+} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
 
-	POINT diff{};
-	ClientToScreen(hwnd, &diff);
+#include <objbase.h>
 
-	return {
-		window.left + (diff.x - window.left),
-		window.top + (diff.y - window.top),
-		client.right,
-		client.bottom
-	};
-}
+// Some required types defined for MSVC/TinyC compiler
+#if defined(_MSC_VER) || defined(__TINYC__)
+#endif
+#endif
 
-overlay::overlay()
-{
-	const auto random_string = [](const std::size_t length){
-		constexpr static char charset[] = {
-			'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-			'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-			'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-			'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
-		};
-		constexpr static std::size_t num_chars = sizeof charset;
+#include <cstdint>
+#include <mutex>
+#include <vector>
+#include "rlFPSCamera.h"
 
-		static std::random_device rd;
-		std::mt19937              gen(rd());
-
-		std::uniform_int_distribution<std::size_t> engine(
-		                                                  std::numeric_limits<std::size_t>::min(),
-		                                                  num_chars - 1
-		                                                 );
-
-		std::string str(length, '\0');
-		for (auto &c : str)
-		{
-			c = charset[engine(gen)];
-		}
-
-		return str;
-	};
-
-	_class = random_string(32);
-	_title = random_string(64);
-}
-
-overlay::overlay(overlay &&rhs) noexcept
-{
-	*this = std::move(rhs);
-}
-
-overlay::~overlay()
-{
-	destroy();
-}
-
-overlay &overlay::operator =(overlay &&rhs) noexcept
-{
-	_class  = std::move(rhs._class);
-	_title  = std::move(rhs._title);
-	_window = rhs._window;
-	_target = rhs._target;
-	_width  = rhs._width;
-	_height = rhs._height;
-
-	rhs._window = nullptr;
-	rhs._target = nullptr;
-	rhs._width  = 0;
-	rhs._height = 0;
-
-	return *this;
-}
-
-api_status overlay::attach(const std::string_view window_title)
-{
-	return window_title.empty()
-		       ? api_status::missing_window_title
-		       : attach(FindWindowA(nullptr, window_title.data()));
-}
-
-api_status overlay::attach(const std::uint32_t process_id)
-{
-	using callback_data_type = std::pair<const std::uint32_t*, HWND>;
-
-	auto data = std::make_pair(&process_id, static_cast<HWND>(nullptr));
-
-	EnumWindows(
-	            [](HWND hwnd, const LPARAM lparam) -> std::int32_t{
-		            if (!hwnd)
-		            {
-			            return 1;
-		            }
-
-		            DWORD pid = 0;
-		            GetWindowThreadProcessId(hwnd, &pid);
-
-		            auto &data = *reinterpret_cast<callback_data_type*>(lparam);
-		            if (*data.first == pid)
-		            {
-			            data.second = hwnd;
-			            return 0;
-		            }
-		            return 1;
-	            },
-
-	            reinterpret_cast<LPARAM>(&data)
-	           );
-
-	return attach(data.second);
-}
-
-api_status overlay::attach(HWND target_window)
-{
-	if (!target_window)
-	{
-		return api_status::missing_window_handle;
-	}
-
-	auto dwm_enabled = 0;
-	if (FAILED(DwmIsCompositionEnabled( &dwm_enabled )) || !dwm_enabled)
-	{
-		return api_status::missing_aero_feature;
-	}
-
-	const WNDCLASSEXA wc = {
-		sizeof(WNDCLASSEX),
-		0,
-		reinterpret_cast<WNDPROC>(window_proc),
-		0,
-		0,
-		GetModuleHandleA(nullptr),
-		LoadIconA(nullptr, MAKEINTRESOURCEA(32512)),
-		LoadCursorA(nullptr, MAKEINTRESOURCEA(32512)),
-		nullptr,
-		nullptr,
-		_class.data(),
-		LoadIconA(nullptr, MAKEINTRESOURCEA(32512)),
-	};
-
-	if (!RegisterClassExA(&wc))
-	{
-		return api_status::failed_to_register_window;
-	}
-
-	_target = target_window;
-	_window = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED /* | WS_EX_TOOLWINDOW | WS_EX_COMPOSITED*/,
-	                          _class.data(),
-	                          _title.data(),
-	                          WS_POPUP,
-	                          CW_USEDEFAULT,
-	                          CW_USEDEFAULT,
-	                          800,
-	                          600,
-	                          nullptr,
-	                          nullptr,
-	                          GetModuleHandleA(nullptr),
-	                          this);
-	if (!_window)
-	{
-		return api_status::failed_to_create_window;
-	}
-
-	scale();
-	if (!SetLayeredWindowAttributes(_window, RGB(0, 0, 0), 255, LWA_ALPHA))
-	{
-		return api_status::failed_to_make_window_transparent;
-	}
-
-	const auto margins = get_window_props<MARGINS>(_window);
-	if (FAILED(DwmExtendFrameIntoClientArea( _window, &margins )))
-	{
-		return api_status::failed_to_make_window_transparent;
-	}
-
-	ShowWindow(_window, SW_SHOWDEFAULT);
-	UpdateWindow(_window);
-
-	if (!_surface)
-	{
-		set_surface(std::make_shared<d2d_surface>());
-	}
-
-	return _surface->initialize(_window, _target);
-}
-
-void overlay::destroy()
-{
-	if (!_class.empty())
-	{
-		UnregisterClassA(_class.data(), nullptr);
-	}
-	if (_window)
-	{
-		DestroyWindow(_window);
-	}
-
-	_window = nullptr;
-	_target = nullptr;
-
-	if (_surface)
-	{
-		_surface->release();
-	}
-}
-
-bool overlay::message_loop() const noexcept
-{
-	if (!_window)
-	{
-		return false;
-	}
-
-	MSG msg{};
-	if (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE) > 0)
-	{
-		TranslateMessage(&msg);
-		DispatchMessageA(&msg);
-
-		if (msg.message == WM_QUIT)
-		{
-			return false;
-		}
-	}
-
-	return true;
-}
-
-void overlay::scale()
-{
-	static auto fix = [](long &in, std::uint32_t &out){
-		if (in == 0)
-		{
-			in++;
-			out--;
-		}
-		else
-		{
-			in--;
-			out++;
-		}
-	};
-
-	auto props = get_window_props(_target);
-
-	_width  = static_cast<std::uint32_t>(props.right);
-	_height = static_cast<std::uint32_t>(props.bottom);
-
-	fix(props.left, _width);
-	fix(props.top, _height);
-
-	MoveWindow(
-	           _window,
-	           props.left,
-	           props.top,
-	           static_cast<std::int32_t>(_width),
-	           static_cast<std::int32_t>(_height),
-	           1
-	          );
-}
-
-void overlay::set_surface(surface_ptr surface)
-{
-	if (_surface)
-	{
-		_surface->release();
-	}
-
-	_surface = std::move(surface);
-}
-
-std::intptr_t overlay::window_proc(void *               window_handle,
-                                   const std::uint32_t  message,
-                                   const std::uintptr_t wparam,
-                                   const std::intptr_t  lparam)
-{
-	auto *const hwnd = static_cast<HWND>(window_handle);
-	switch (message)
-	{
-		case WM_DESTROY:
-			PostQuitMessage(EXIT_SUCCESS);
-			return 0;
-		case WM_KEYDOWN:
-			return 0;
-		case WM_ERASEBKGND:
-			SendMessageA(hwnd, WM_PAINT, 0, 0);
-			return TRUE;
-		default:
-			break;
-	}
-
-	return DefWindowProcA(hwnd, message, wparam, lparam);
-}
+#include "raylib.h"
 
 #pragma pack(push, 1)
 enum class DrawCommandType : std::uint8_t
@@ -320,16 +93,16 @@ enum class DrawCommandType : std::uint8_t
 struct Vector
 {
 	float x, y, z;
+
+	[[nodiscard]] Vector3 ToRayLib() const
+	{
+		return {y, z, x};
+	}
 };
 
 struct QAngle
 {
 	float x, y, z;
-};
-
-struct Color
-{
-	std::uint8_t r, g, b, a;
 };
 
 struct LineCommandData
@@ -348,7 +121,7 @@ struct TextCommandData
 struct DrawCommandPacket
 {
 	DrawCommandType type;
-	Color           color;
+	Color           color; // Raylib color
 	float           drawDuration;
 
 	union
@@ -386,164 +159,212 @@ struct Packet
 constexpr auto PIPE_NAME        = R"(\\.\pipe\CS2DebugOverlay)";
 constexpr auto PIPE_BUFFER_SIZE = sizeof(Packet);
 
-std::int32_t main()
+// Windows.h RaySlop...
+extern "C" HWND WINAPI FindWindowA(LPCSTR lpClassName, LPCSTR lpWindowName);
+extern "C" BOOL WINAPI GetWindowRect(HWND hWnd, LPRECT lpRect);
+
+// Global list of commands to draw and a mutex to protect it.
+static inline std::vector<DrawCommandPacket> g_drawCommands;
+static inline std::mutex                     g_drawMutex;
+
+int main()
 {
-	const auto overlay = std::make_unique<aero::overlay>();
-	const auto status  = overlay->attach("Counter-Strike 2");
+	const HWND CS2_Window = FindWindowA(nullptr, "Counter-Strike 2");
 
-	if (status != api_status::success)
-	{
-		printf("[>] failed to create overlay: %u\n", static_cast<std::uint32_t>(status));
+	if (!CS2_Window)
 		return -1;
-	}
 
-	const auto surface = overlay->get_surface();
-	const auto font    = surface->add_font("test", "Consolas", 12.f);
+	RECT cs2_rect;
+	if (!GetWindowRect(CS2_Window, &cs2_rect))
+		return -2;
 
-	// Drawing state
-	std::vector<DrawCommandPacket> drawCommands;
+	const int overlay_w = cs2_rect.right - cs2_rect.left;
+	const int overlay_h = cs2_rect.bottom - cs2_rect.top;
 
-	surface->add_callback([&surface, &font, &drawCommands]{
-		for (const auto &cmd : drawCommands)
+	SetConfigFlags(FLAG_WINDOW_TRANSPARENT | FLAG_WINDOW_MOUSE_PASSTHROUGH | FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TOPMOST | FLAG_WINDOW_UNFOCUSED | FLAG_WINDOW_ALWAYS_RUN);
+	InitWindow(overlay_w, overlay_h, "DebugOverlay");
+
+	SetWindowSize(overlay_w, overlay_h);
+	SetWindowPosition(cs2_rect.left, cs2_rect.top);
+
+	SetTargetFPS(144);
+
+	rlFPCamera cam;
+	rlFPCameraInit(&cam, 90, {0, 0, 0});
+
+	std::atomic<bool> running{true};
+
+	std::thread packetThread([&running, &cam](){
+		std::vector<uint8_t> buffer(PIPE_BUFFER_SIZE);
+
+		while (running)
 		{
-			switch (cmd.type)
+			const HANDLE hPipe = CreateFileA(
+			                                 PIPE_NAME,
+			                                 GENERIC_READ,
+			                                 0,
+			                                 nullptr,
+			                                 OPEN_EXISTING,
+			                                 0,
+			                                 nullptr
+			                                );
+
+			if (hPipe != INVALID_HANDLE_VALUE)
 			{
-				case DrawCommandType::LINE:
-					surface->line(
-					              cmd.line.start.x, cmd.line.start.y,
-					              cmd.line.end.x, cmd.line.end.y,
-					              (cmd.color.r << 24) | (cmd.color.g << 16) | (cmd.color.b << 8) | cmd.color.a
-					             );
-					break;
-				case DrawCommandType::TEXT:
-					surface->text(
-					              cmd.text.position.x, cmd.text.position.y,
-					              font,
-					              (cmd.color.r << 24) | (cmd.color.g << 16) | (cmd.color.b << 8) | cmd.color.a,
-					              cmd.text.text
-					             );
-					break;
+				printf("Client: Sucacessfully connected to the pipe.\n");
+				printf("Client: Waiting to receive messages...\n");
+
+				while (running)
+				{
+					DWORD      dwRead   = 0;
+					const BOOL fSuccess = ReadFile(
+					                               hPipe,
+					                               buffer.data(),
+					                               static_cast<DWORD>(buffer.size()),
+					                               &dwRead,
+					                               nullptr
+					                              );
+
+					if (!fSuccess || dwRead == 0)
+					{
+						if (GetLastError() == ERROR_BROKEN_PIPE)
+						{
+							printf("Client: Server disconnected. The pipe is broken.\n");
+						}
+						else
+						{
+							fprintf(stderr, "Client: ReadFile failed, GLE=%lu\n", GetLastError());
+						}
+						break;
+					}
+
+					size_t offset = 0;
+					while (offset < dwRead)
+					{
+						if (dwRead - offset < sizeof(PacketType))
+							break;
+
+						const Packet *pkt = reinterpret_cast<const Packet*>(buffer.data() + offset);
+
+						switch (pkt->type)
+						{
+							case PacketType::DRAW_COMMAND:
+							{
+								if (dwRead - offset < sizeof(Packet))
+									break;
+
+								std::lock_guard lock(g_drawMutex);
+								if (g_drawCommands.size() > 200)
+									g_drawCommands.pop_back();
+
+								g_drawCommands.push_back(pkt->drawCommand);
+								break;
+							}
+							case PacketType::WORLD_UPDATE:
+							{
+								if (dwRead - offset < sizeof(Packet))
+									break;
+
+								const WorldUpdatePacket &worldUpdate = pkt->worldUpdate;
+								printf("viewAngles %.2f %.2f origin %.2f %.2f %.2f\n",
+								       worldUpdate.viewAngles.x, worldUpdate.viewAngles.y,
+								       worldUpdate.origin.x, worldUpdate.origin.y, worldUpdate.origin.z);
+
+								rlFPCameraSetPosition(&cam, worldUpdate.origin.ToRayLib());
+
+								cam.ViewAngles = {
+									(-worldUpdate.viewAngles.y) * DEG2RAD,
+									worldUpdate.viewAngles.x * DEG2RAD,
+								};
+
+								//camera
+								break;
+							}
+							case PacketType::CLEAR_ALL_DRAWINGS:
+							{
+								std::lock_guard lock(g_drawMutex);
+								g_drawCommands.clear();
+								break;
+							}
+							default:
+							{
+								fprintf(stderr, "Client: Unknown packet type %u\n", static_cast<std::uint8_t>(pkt->type));
+								break;
+							}
+						}
+
+						offset += sizeof(Packet);
+					}
+
+					std::this_thread::sleep_for(std::chrono::milliseconds(2));
+				}
+				CloseHandle(hPipe);
+			}
+			else
+			{
+				fprintf(stderr, "Client: Could not open pipe, GLE=%lu. Retrying in 2 seconds...\n", GetLastError());
+				std::this_thread::sleep_for(std::chrono::seconds(2));
 			}
 		}
 	});
 
-	std::vector<uint8_t> buffer(PIPE_BUFFER_SIZE);
-
-	printf("Pipe Client: Connecting to pipe...\n");
-
-	while (overlay->message_loop())
+	while (!WindowShouldClose())
 	{
-		printf("Client: Attempting to connect to the pipe...\n");
+		rlFPCameraUpdate(&cam);
 
-		const HANDLE hPipe = CreateFileA(
-		                                 PIPE_NAME,
-		                                 GENERIC_READ,
-		                                 0,
-		                                 nullptr,
-		                                 OPEN_EXISTING,
-		                                 0,
-		                                 nullptr
-		                                );
+		BeginDrawing();
 
-		if (hPipe != INVALID_HANDLE_VALUE)
+		ClearBackground(BLANK);
+
+		rlFPCameraBeginMode3D(&cam);
 		{
-			printf("Client: Successfully connected to the pipe.\n");
-			printf("Client: Waiting to receive messages...\n");
-
-			while (true)
+			// Draw everything in the command list.
+			std::lock_guard lock(g_drawMutex);
+			for (const auto &cmd : g_drawCommands)
 			{
-				DWORD      dwRead   = 0;
-				const BOOL fSuccess = ReadFile(
-				                               hPipe,
-				                               buffer.data(),
-				                               static_cast<DWORD>(buffer.size()),
-				                               &dwRead,
-				                               nullptr
-				                              );
-
-				if (!fSuccess || dwRead == 0)
+				if (cmd.type == DrawCommandType::LINE)
 				{
-					if (GetLastError() == ERROR_BROKEN_PIPE)
+					DrawLine3D(cmd.line.start.ToRayLib(), cmd.line.end.ToRayLib(), cmd.color);
+				}
+				else if (cmd.type == DrawCommandType::TEXT)
+				{
+					// NOTE: raylib's DrawText is 2D. For 3D text, you'd use DrawText3D
+					// which requires a Font. For simplicity, we'll use DrawBillboard.
+
+					//GetWorldToScreen()
+
+					if (cmd.text.onscreen)
 					{
-						printf("Client: Server disconnected. The pipe is broken.\n");
+						DrawText("Congrats! You created your first window!", (int)cmd.text.position.x, (int)cmd.text.position.y, 20, LIGHTGRAY);
 					}
 					else
 					{
-						fprintf(stderr, "Client: ReadFile failed, GLE=%lu\n", GetLastError());
+						Vector2 screenPos = GetWorldToScreen(cmd.text.position.ToRayLib(), cam.ViewCamera);
+
+						DrawText("Congrats! You created your first window!", (int)screenPos.x, (int)screenPos.y, 20, LIGHTGRAY);
 					}
-
-					break;
 				}
-
-				//Process packets in buffer
-				size_t offset = 0;
-				while (offset < dwRead)
-				{
-					if (dwRead - offset < sizeof(PacketType))
-						break; // Not enough data for even the type
-
-					const Packet pkt = *reinterpret_cast<Packet*>(buffer.data());
-
-					switch (pkt.type)
-					{
-						case PacketType::DRAW_COMMAND:
-						{
-							if (dwRead - offset < sizeof(DrawCommandPacket))
-								break;
-
-							if (drawCommands.size() > 200)
-								drawCommands.pop_back();
-
-							DrawCommandPacket cmd = *reinterpret_cast<DrawCommandPacket*>(buffer.data() + sizeof(PacketType));
-							drawCommands.push_back(cmd);
-
-							break;
-						}
-						case PacketType::WORLD_UPDATE:
-						{
-							if (dwRead - offset < sizeof(WorldUpdatePacket))
-								break;
-
-							WorldUpdatePacket worldUpdate = *reinterpret_cast<WorldUpdatePacket*>(buffer.data() + sizeof(PacketType));
-
-							printf("viewAngles %.2f %.2f origin %.2f %.2f %.2f\n",
-							       worldUpdate.viewAngles.x, worldUpdate.viewAngles.y,
-							       worldUpdate.origin.x, worldUpdate.origin.y, worldUpdate.origin.z);
-
-							break;
-						}
-						case PacketType::CLEAR_ALL_DRAWINGS:
-						{
-							drawCommands.clear();
-							break;
-						}
-						default:
-						{
-							fprintf(stderr, "Client: Unknown packet type %u\n", static_cast<std::uint8_t>(pkt.type));
-							break;
-						}
-					}
-
-					offset += sizeof(Packet);
-				}
-
-				if (surface->begin_scene())
-				{
-					surface->end_scene();
-				}
-
-				std::this_thread::sleep_for(std::chrono::milliseconds(2));
 			}
-		}
-		else
-		{
-			fprintf(stderr, "Client: Could not open pipe, GLE=%lu. Retrying in 2 seconds...\n", GetLastError());
-			Sleep(2000);
-		}
 
-		if (hPipe != INVALID_HANDLE_VALUE)
-		{
-			CloseHandle(hPipe);
+			DrawCylinder({-1114, -245, -1215}, 20, 20, 100, 10, GREEN);
+
+			//DrawPlane({0, 0, 0}, {5000, 5000}, CLITERAL(Color){ 200, 200, 200, 55 });
+			//DrawGrid(100, 1.0f); // Draw a grid for context
 		}
+		rlFPCameraEndMode3D();
+
+		// Instead, draw a fully transparent rectangle over the window
+		//DrawRectangleLines(1, 1, GetScreenWidth() - 2, GetScreenHeight() - 2, LIGHTGRAY);
+
+		//WorldTo
+		DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
+
+		DrawFPS(100, 100);
+
+		EndDrawing();
 	}
+
+	CloseWindow();
+
+	return 0;
 }
