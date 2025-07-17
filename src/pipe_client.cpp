@@ -3,8 +3,9 @@
 #include <iostream>
 #include <chrono>
 #include <cstdio>
+#include <algorithm>
 
-PipeClient::PipeClient() = default;
+PipeClient::PipeClient() : m_currentTime(0.0f) { }
 
 PipeClient::~PipeClient()
 {
@@ -35,17 +36,29 @@ void PipeClient::Stop()
 
 std::vector<DrawCommandPacket> PipeClient::GetDrawCommands()
 {
-	std::lock_guard<std::mutex> lock(m_drawMutex);
+	std::lock_guard lock(m_drawMutex);
 	return m_drawCommands;
 }
 
 void PipeClient::ClearDrawCommands()
 {
-	std::lock_guard<std::mutex> lock(m_drawMutex);
+	std::lock_guard lock(m_drawMutex);
 	m_drawCommands.clear();
 }
 
-void PipeClient::PacketThreadWorker(std::atomic<bool> &running, rlFPCamera &camera)
+void PipeClient::ExpireOldCommands()
+{
+	std::lock_guard lock(m_drawMutex);
+
+	// Remove expired draw commands using std::remove_if and erase
+	m_drawCommands.erase(std::remove_if(m_drawCommands.begin(), m_drawCommands.end(),
+	                                    [this](const DrawCommandPacket &cmd){
+		                                    return m_currentTime > cmd.drawEndTime;
+	                                    }),
+	                     m_drawCommands.end());
+}
+
+void PipeClient::PacketThreadWorker(const std::atomic<bool> &running, rlFPCamera &camera)
 {
 	std::vector<uint8_t> buffer(PIPE_BUFFER_SIZE);
 
@@ -120,7 +133,7 @@ void PipeClient::ProcessPacket(const Packet *packet, rlFPCamera &camera)
 	{
 		case PacketType::DRAW_COMMAND:
 		{
-			std::lock_guard<std::mutex> lock(m_drawMutex);
+			std::lock_guard lock(m_drawMutex);
 			if (m_drawCommands.size() > Config::MAX_DRAW_COMMANDS)
 				m_drawCommands.pop_back();
 
@@ -130,9 +143,14 @@ void PipeClient::ProcessPacket(const Packet *packet, rlFPCamera &camera)
 		case PacketType::WORLD_UPDATE:
 		{
 			const WorldUpdatePacket &worldUpdate = packet->worldUpdate;
-			printf("viewAngles %.2f %.2f origin %.2f %.2f %.2f\n",
-			       worldUpdate.viewAngles.x, worldUpdate.viewAngles.y,
-			       worldUpdate.origin.x, worldUpdate.origin.y, worldUpdate.origin.z);
+
+			// Store the current time and expire old commands
+			m_currentTime = worldUpdate.curtime;
+			ExpireOldCommands();
+
+			//printf("viewAngles %.2f %.2f origin %.2f %.2f %.2f\n",
+			//worldUpdate.viewAngles.x, worldUpdate.viewAngles.y,
+			//worldUpdate.origin.x, worldUpdate.origin.y, worldUpdate.origin.z);
 
 			rlFPCameraSetPosition(&camera, worldUpdate.origin.ToRayLib());
 

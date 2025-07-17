@@ -43,7 +43,7 @@ void OverlayRenderer::Shutdown()
 	}
 }
 
-void OverlayRenderer::BeginFrame()
+void OverlayRenderer::BeginFrame() const
 {
 	if (!m_initialized)
 		return;
@@ -61,7 +61,7 @@ void OverlayRenderer::EndFrame()
 	EndDrawing();
 }
 
-void OverlayRenderer::RenderCommands(const std::vector<DrawCommandPacket> &commands, const rlFPCamera &camera)
+void OverlayRenderer::RenderCommands(const std::vector<DrawCommandPacket> &commands, const rlFPCamera &camera) const
 {
 	if (!m_initialized)
 		return;
@@ -83,12 +83,12 @@ void OverlayRenderer::Render3DCommands(const std::vector<DrawCommandPacket> &com
 	}
 
 	// Draw some debug geometry
-	DrawCylinder({-1114, -245, -1215},
-	             Config::DEBUG_CYLINDER_RADIUS,
-	             Config::DEBUG_CYLINDER_RADIUS,
-	             Config::DEBUG_CYLINDER_HEIGHT,
-	             Config::DEBUG_CYLINDER_SLICES,
-	             GREEN);
+	//DrawCapsuleWires({-1114, -245, -1215},
+	//             Config::DEBUG_CYLINDER_RADIUS,
+	//             Config::DEBUG_CYLINDER_RADIUS,
+	//             Config::DEBUG_CYLINDER_HEIGHT,
+	//             Config::DEBUG_CYLINDER_SLICES,
+	//             GREEN);
 
 	rlFPCameraEndMode3D();
 }

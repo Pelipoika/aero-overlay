@@ -16,7 +16,7 @@ namespace Config
 	constexpr int  PIPE_READ_DELAY_MS       = 2;
 
 	// Rendering settings
-	constexpr size_t MAX_DRAW_COMMANDS = 200;
+	constexpr size_t MAX_DRAW_COMMANDS = 20000;
 	constexpr int    DEBUG_TEXT_SIZE   = 20;
 
 	// Debug geometry settings

@@ -43,7 +43,7 @@ struct DrawCommandPacket
 {
 	DrawCommandType type;
 	Color           color;
-	float           drawDuration;
+	float           drawEndTime;
 
 	union
 	{
@@ -56,6 +56,7 @@ struct WorldUpdatePacket
 {
 	QAngle viewAngles;
 	Vector origin;
+	float  curtime;
 };
 
 enum class PacketType : std::uint8_t

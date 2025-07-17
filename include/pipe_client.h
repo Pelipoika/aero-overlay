@@ -21,12 +21,14 @@ public:
 	void                           ClearDrawCommands();
 
 private:
-	void PacketThreadWorker(std::atomic<bool> &running, rlFPCamera &camera);
+	void PacketThreadWorker(const std::atomic<bool> &running, rlFPCamera &camera);
 	void ProcessPacket(const Packet *packet, rlFPCamera &camera);
+	void ExpireOldCommands();
 
 	std::thread                    m_packetThread;
 	std::vector<DrawCommandPacket> m_drawCommands;
 	std::mutex                     m_drawMutex;
+	float                          m_currentTime;
 
 	static constexpr size_t MAX_DRAW_COMMANDS = 200;
 };
