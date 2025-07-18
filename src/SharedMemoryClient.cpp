@@ -19,7 +19,7 @@ bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 	m_hEvent = OpenEventW(SYNCHRONIZE, FALSE, EVENT_NAME);
 	if (m_hEvent == nullptr)
 	{
-		DWORD error = GetLastError();
+		const DWORD error = GetLastError();
 		std::cerr << "Client: OpenEvent failed, GLE=" << error;
 		switch (error)
 		{
@@ -28,6 +28,8 @@ bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 				break;
 			case ERROR_ACCESS_DENIED:
 				std::cerr << " (Access denied - insufficient permissions)";
+				break;
+			default:
 				break;
 		}
 		std::cerr << ". Is the server running?\n";
@@ -43,7 +45,7 @@ bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 
 	if (m_hMapFile == nullptr)
 	{
-		DWORD error = GetLastError();
+		const DWORD error = GetLastError();
 		std::cerr << "Client: OpenFileMapping failed, GLE=" << error;
 		switch (error)
 		{
@@ -52,6 +54,8 @@ bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 				break;
 			case ERROR_ACCESS_DENIED:
 				std::cerr << " (Access denied - insufficient permissions)";
+				break;
+			default:
 				break;
 		}
 		std::cerr << "\n";
@@ -70,7 +74,7 @@ bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 
 	if (m_pSharedMem == nullptr)
 	{
-		DWORD error = GetLastError();
+		const DWORD error = GetLastError();
 		std::cerr << "Client: MapViewOfFile failed, GLE=" << error;
 		switch (error)
 		{
@@ -82,6 +86,8 @@ bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 				break;
 			case ERROR_NOT_ENOUGH_MEMORY:
 				std::cerr << " (Not enough memory)";
+				break;
+			default:
 				break;
 		}
 		std::cerr << "\n";
@@ -145,13 +151,13 @@ void SharedMemoryClient::ClientThreadWorker(const std::atomic<bool> &running, rl
 	{
 		// Wait for the server to signal that new data is available.
 		// Use a timeout to periodically check the 'running' flag.
-		DWORD waitResult = WaitForSingleObject(m_hEvent, 100); // 100ms timeout
+		const DWORD waitResult = WaitForSingleObject(m_hEvent, 100); // 100ms timeout
 
 		if (waitResult == WAIT_OBJECT_0)
 		{
 			// Event was signaled, process all available data.
-			long head = m_pSharedMem->head;
-			long tail = m_pSharedMem->tail;
+			const size_t head = m_pSharedMem->head;
+			size_t       tail = m_pSharedMem->tail;
 
 			while (tail != head)
 			{
@@ -161,7 +167,7 @@ void SharedMemoryClient::ClientThreadWorker(const std::atomic<bool> &running, rl
 				PacketHeader header;
 				memcpy(&header, m_pSharedMem->buffer + tail, sizeof(PacketHeader));
 
-				long dataStart = (tail + sizeof(PacketHeader)) & (SHARED_MEM_BUFFER_SIZE - 1);
+				const size_t dataStart = (tail + sizeof(PacketHeader)) & (SHARED_MEM_BUFFER_SIZE - 1);
 
 				// Read packet data
 				std::vector<BYTE> dataBuffer(header.size);
@@ -170,7 +176,7 @@ void SharedMemoryClient::ClientThreadWorker(const std::atomic<bool> &running, rl
 					if (dataStart + header.size > SHARED_MEM_BUFFER_SIZE)
 					{
 						// Data wraps around the buffer
-						long firstPartSize = SHARED_MEM_BUFFER_SIZE - dataStart;
+						const size_t firstPartSize = SHARED_MEM_BUFFER_SIZE - dataStart;
 						memcpy(dataBuffer.data(), m_pSharedMem->buffer + dataStart, firstPartSize);
 						memcpy(dataBuffer.data() + firstPartSize, m_pSharedMem->buffer, header.size - firstPartSize);
 					}
@@ -225,9 +231,9 @@ void SharedMemoryClient::ProcessPacket(PacketType type, const BYTE *data, uint32
 			ClearDrawCommands();
 			break;
 		}
-		default:
+		default:  // NOLINT(clang-diagnostic-covered-switch-default)
 		{
-			fprintf(stderr, "Client: Unknown packet type %u\n", static_cast<std::uint8_t>(type));
+			std::cerr << "Client: Unknown packet type " << static_cast<std::uint8_t>(type) << '\n';
 			break;
 		}
 	}

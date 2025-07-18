@@ -1,9 +1,9 @@
 #pragma once
 
-#include "raylib.h"
-#include "rlFPSCamera.h"
-#include "SharedDefs.h"
 #include <vector>
+
+#include "SharedDefs.h"
+#include "Raylib/rlFPSCamera.h"
 
 class OverlayRenderer
 {

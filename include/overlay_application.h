@@ -1,10 +1,9 @@
 #pragma once
 
-#include "overlay_renderer.h"
-#include "rlFPSCamera.h"
 #include <atomic>
 #include <memory>
 
+#include "overlay_renderer.h"
 #include "SharedMemoryClient.h"
 #include "window_manager.h"
 

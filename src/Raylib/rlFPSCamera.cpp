@@ -28,9 +28,10 @@
 *
 **********************************************************************************************/
 
-#include "rlFPSCamera.h"
-#include "rlgl.h"
+#include "Raylib/rlFPSCamera.h"
+
 #include <cstdlib>
+#include "Raylib/rlgl.h"
 
 void rlFPCameraInit(rlFPCamera *camera, const float fovY, const Vector3 position)
 {
@@ -46,10 +47,7 @@ void rlFPCameraInit(rlFPCamera *camera, const float fovY, const Vector3 position
 
 	camera->TargetDistance     = 1;
 	camera->PlayerEyesPosition = 0.5f;
-	camera->ViewAngles         =
-	{
-		0, 0
-	};
+	camera->ViewAngles         = {.x = 0, .y = 0};
 
 	camera->CameraPosition = position;
 	camera->FOV.y          = fovY;
@@ -72,8 +70,8 @@ void rlFPCameraResizeView(rlFPCamera *camera)
 	if (camera == nullptr)
 		return;
 
-	float width  = static_cast<float>(GetScreenWidth());
-	float height = static_cast<float>(GetScreenHeight());
+	const float width  = static_cast<float>(GetScreenWidth());
+	const float height = static_cast<float>(GetScreenHeight());
 
 	camera->FOV.y = camera->ViewCamera.fovy;
 
@@ -89,7 +87,7 @@ Vector3 rlFPCameraGetPosition(const rlFPCamera *camera)
 void rlFPCameraSetPosition(rlFPCamera *camera, const Vector3 pos)
 {
 	camera->CameraPosition      = pos;
-	Vector3 forward             = Vector3Subtract(camera->ViewCamera.target, camera->ViewCamera.position);
+	const Vector3 forward       = Vector3Subtract(camera->ViewCamera.target, camera->ViewCamera.position);
 	camera->ViewCamera.position = camera->CameraPosition;
 	camera->ViewCamera.target   = Vector3Add(camera->CameraPosition, forward);
 }
@@ -111,8 +109,8 @@ void rlFPCameraUpdate(rlFPCamera *camera)
 		camera->ViewAngles.y = camera->MaximumViewY * DEG2RAD;
 
 	// Recalculate camera target considering translation and rotation
-	Vector3 target = Vector3Transform({0, 0, 1},
-	                                  MatrixRotateZYX({camera->ViewAngles.y, -camera->ViewAngles.x, 0}));
+	const Vector3 target = Vector3Transform({0, 0, 1},
+	                                        MatrixRotateZYX({camera->ViewAngles.y, -camera->ViewAngles.x, 0}));
 
 	camera->Forward = Vector3Transform({0, 0, 1},
 	                                   MatrixRotateZYX({0, -camera->ViewAngles.x, 0}));
@@ -121,7 +119,7 @@ void rlFPCameraUpdate(rlFPCamera *camera)
 
 	camera->ViewCamera.position = camera->CameraPosition;
 
-	float eyeOffset = camera->PlayerEyesPosition;
+	const float eyeOffset = camera->PlayerEyesPosition;
 
 	camera->ViewCamera.up.x = 0;
 	camera->ViewCamera.up.z = 0;
@@ -143,16 +141,16 @@ static void SetupCamera(const rlFPCamera *camera, const float aspect)
 	if (camera->ViewCamera.projection == CAMERA_PERSPECTIVE)
 	{
 		// Setup perspective projection
-		double top   = RL_CULL_DISTANCE_NEAR * tan(camera->ViewCamera.fovy * 0.5 * DEG2RAD);
-		double right = top * aspect;
+		const double top   = RL_CULL_DISTANCE_NEAR * tan(camera->ViewCamera.fovy * 0.5 * DEG2RAD);
+		const double right = top * aspect;
 
 		rlFrustum(-right, right, -top, top, camera->NearPlane, camera->FarPlane);
 	}
 	else if (camera->ViewCamera.projection == CAMERA_ORTHOGRAPHIC)
 	{
 		// Setup orthographic projection
-		double top   = camera->ViewCamera.fovy / 2.0;
-		double right = top * aspect;
+		const double top   = camera->ViewCamera.fovy / 2.0;
+		const double right = top * aspect;
 
 		rlOrtho(-right, right, -top, top, camera->NearPlane, camera->FarPlane);
 	}
@@ -163,7 +161,7 @@ static void SetupCamera(const rlFPCamera *camera, const float aspect)
 	rlLoadIdentity();                   // Reset current matrix (modelview)
 
 	// Setup Camera view
-	Matrix matView = MatrixLookAt(camera->ViewCamera.position, camera->ViewCamera.target, camera->ViewCamera.up);
+	const Matrix matView = MatrixLookAt(camera->ViewCamera.position, camera->ViewCamera.target, camera->ViewCamera.up);
 
 	rlMultMatrixf(MatrixToFloatV(matView).v);      // Multiply modelview matrix by view matrix (camera)
 
@@ -175,7 +173,7 @@ void rlFPCameraBeginMode3D(const rlFPCamera *camera)
 	if (camera == nullptr)
 		return;
 
-	float aspect = static_cast<float>(GetScreenWidth()) / static_cast<float>(GetScreenHeight());
+	const float aspect = static_cast<float>(GetScreenWidth()) / static_cast<float>(GetScreenHeight());
 	SetupCamera(camera, aspect);
 }
 

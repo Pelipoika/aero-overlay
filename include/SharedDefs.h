@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <win32_minimal.h>
 
-#include "raylib.h"
-#include "win32_minimal.h"
+#include "Raylib/raylib.h"
 
 // Not packed.
 struct Vector
@@ -93,11 +93,11 @@ struct SharedMemoryLayout
 {
 	// The head is the index where the server will write the next packet.
 	// It is only ever written to by the server.
-	alignas(64) volatile long head;
+	alignas(64) volatile size_t head;
 
 	// The tail is the index where the client will read the next packet.
 	// It is only ever written to by the client.
-	alignas(64) volatile long tail;
+	alignas(64) volatile size_t tail;
 
 	// The data buffer.
 	BYTE buffer[SHARED_MEM_BUFFER_SIZE];

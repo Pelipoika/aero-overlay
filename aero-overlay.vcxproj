@@ -112,7 +112,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -153,7 +153,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>PLATFORM_DESKTOP;GRAPHICS_API_OPENGL_33;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -172,17 +172,17 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\overlay_application.cpp" />
     <ClCompile Include="src\overlay_renderer.cpp" />
-    <ClCompile Include="src\rlFPSCamera.cpp" />
+    <ClCompile Include="src\Raylib\rlFPSCamera.cpp" />
     <ClCompile Include="src\window_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\config.h" />
     <ClInclude Include="include\overlay_application.h" />
     <ClInclude Include="include\overlay_renderer.h" />
-    <ClInclude Include="include\raylib.h" />
-    <ClInclude Include="include\raymath.h" />
-    <ClInclude Include="include\rlgl.h" />
-    <ClInclude Include="include\rlFPSCamera.h" />
+    <ClInclude Include="include\Raylib\raylib.h" />
+    <ClInclude Include="include\Raylib\raymath.h" />
+    <ClInclude Include="include\Raylib\rlgl.h" />
+    <ClInclude Include="include\Raylib\rlFPSCamera.h" />
     <ClInclude Include="include\win32_minimal.h" />
     <ClInclude Include="include\window_manager.h" />
     <ClInclude Include="include\SharedDefs.h" />

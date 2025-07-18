@@ -1,11 +1,12 @@
 #pragma once
 
-#include "SharedDefs.h"
-#include "rlFPSCamera.h"
-#include <vector>
 #include <atomic>
-#include <thread>
 #include <mutex>
+#include <thread>
+#include <vector>
+
+#include "SharedDefs.h"
+#include "Raylib/rlFPSCamera.h"
 
 class SharedMemoryClient
 {
