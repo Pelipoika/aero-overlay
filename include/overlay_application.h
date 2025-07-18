@@ -26,7 +26,4 @@ private:
 
 	rlFPCamera        m_camera;
 	std::atomic<bool> m_running;
-
-	static constexpr auto TARGET_WINDOW_TITLE  = "Counter-Strike 2";
-	static constexpr auto OVERLAY_WINDOW_TITLE = "DebugOverlay";
 };

@@ -6,7 +6,7 @@ WindowManager::WindowManager() : m_targetWindow(nullptr), m_windowTitle(nullptr)
 bool WindowManager::FindTargetWindow(const char *windowTitle)
 {
 	m_windowTitle  = windowTitle;
-	m_targetWindow = FindWindowA(nullptr, windowTitle);
+	m_targetWindow = FindWindowA("SDL_App", windowTitle);
 
 	if (!m_targetWindow)
 	{
