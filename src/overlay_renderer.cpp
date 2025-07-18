@@ -80,7 +80,13 @@ void OverlayRenderer::Render3DCommands(const std::vector<DrawCommandPacket> &com
 	{
 		if (cmd.type == DrawCommandType::LINE)
 		{
-			DrawLine3D(cmd.line.start.ToRayLib(), cmd.line.end.ToRayLib(), cmd.color);
+			auto [start, end] = cmd.line;
+			DrawLine3D(start.ToRayLib(), end.ToRayLib(), cmd.color);
+		}
+		else if (cmd.type == DrawCommandType::BBOX)
+		{
+			auto [mins, maxs] = cmd.box;
+			DrawBoundingBox({mins.ToRayLib(), maxs.ToRayLib()}, cmd.color);
 		}
 	}
 

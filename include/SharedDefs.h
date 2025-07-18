@@ -35,6 +35,7 @@ constexpr size_t SHARED_MEM_BUFFER_SIZE = 2048 * 2048; // 1MB
 enum class DrawCommandType : std::uint8_t
 {
 	LINE,
+	BBOX,
 	TEXT,
 };
 
@@ -42,6 +43,12 @@ struct LineCommandData
 {
 	Vector start;
 	Vector end;
+};
+
+struct BBoxCommandData
+{
+	Vector mins;
+	Vector maxs;
 };
 
 struct TextCommandData
@@ -60,6 +67,7 @@ struct DrawCommandPacket
 	union
 	{
 		LineCommandData line;
+		BBoxCommandData box;
 		TextCommandData text;
 	};
 };
