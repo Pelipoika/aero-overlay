@@ -15,7 +15,7 @@ public:
 	void Shutdown();
 
 	void BeginFrame() const;
-	void EndFrame();
+	void EndFrame() const;
 
 	void RenderCommands(const std::vector<DrawCommandPacket> &commands, const rlFPCamera &camera) const;
 	void RenderDebugInfo();

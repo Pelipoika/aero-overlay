@@ -312,6 +312,6 @@ void SharedMemoryClient::ExpireOldCommands()
 		              // so we check if its end time is 0 but we have a newer time.
 		              if (cmd.drawEndTime <= 0.0f)
 			              return m_currentTime > 0.0f;
-		              return m_currentTime > cmd.drawEndTime;
+		              return m_currentTime >= cmd.drawEndTime;
 	              });
 }

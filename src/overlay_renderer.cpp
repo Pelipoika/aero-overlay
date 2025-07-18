@@ -9,7 +9,7 @@ OverlayRenderer::~OverlayRenderer()
 	Shutdown();
 }
 
-bool OverlayRenderer::Initialize(int width, int height, int x, int y)
+bool OverlayRenderer::Initialize(const int width, const int height, const int x, const int y)
 {
 	if (m_initialized)
 		return true;
@@ -54,7 +54,7 @@ void OverlayRenderer::BeginFrame() const
 	ClearBackground(BLANK);
 }
 
-void OverlayRenderer::EndFrame()
+void OverlayRenderer::EndFrame() const
 {
 	if (!m_initialized)
 		return;
@@ -78,15 +78,48 @@ void OverlayRenderer::Render3DCommands(const std::vector<DrawCommandPacket> &com
 
 	for (const auto &cmd : commands)
 	{
-		if (cmd.type == DrawCommandType::LINE)
+		switch (cmd.type)
 		{
-			auto [start, end] = cmd.line;
-			DrawLine3D(start.ToRayLib(), end.ToRayLib(), cmd.color);
-		}
-		else if (cmd.type == DrawCommandType::BBOX)
-		{
-			auto [mins, maxs] = cmd.box;
-			DrawBoundingBox({mins.ToRayLib(), maxs.ToRayLib()}, cmd.color);
+			case DrawCommandType::LINE:
+			{
+				auto [start, end] = cmd.line;
+				DrawLine3D(start.ToRayLib(), end.ToRayLib(), cmd.color);
+				break;
+			}
+			case DrawCommandType::TRIANGLE:
+			{
+				auto [p1, p2, p3] = cmd.triangle;
+				DrawTriangle3D(p1.ToRayLib(), p2.ToRayLib(), p3.ToRayLib(), cmd.color);
+				break;
+			}
+			case DrawCommandType::SPHERE:
+			{
+				auto [center, radius] = cmd.sphere;
+				DrawSphereWires(center.ToRayLib(), radius, Config::DEBUG_CYLINDER_SLICES, Config::DEBUG_CYLINDER_SLICES, cmd.color);
+				break;
+			}
+			case DrawCommandType::CIRCLE:
+			{
+				auto [center, xAxis, yAxis, radius] = cmd.circle;
+				DrawCircle3D(center.ToRayLib(), radius, xAxis.ToRayLib(), yAxis.ToRayLib().y, cmd.color);
+				break;
+			}
+			case DrawCommandType::BBOX:
+			{
+				auto [mins, maxs] = cmd.box;
+				DrawBoundingBox({mins.ToRayLib(), maxs.ToRayLib()}, cmd.color);
+				break;
+			}
+			case DrawCommandType::TEXT:
+			{
+				// Handled in Render3DCommands
+				break;
+			}
+			default:  // NOLINT(clang-diagnostic-covered-switch-default)
+			{
+				std::cout << "Uknown cmd type : " << static_cast<int>(cmd.type) << '\n';
+				break;
+			}
 		}
 	}
 

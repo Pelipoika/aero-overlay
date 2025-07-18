@@ -21,6 +21,7 @@ struct QAngle
 	float x, y, z;
 };
 
+// --- Configuration ---
 // Names for the Windows synchronization and memory objects.
 constexpr auto SHARED_MEM_NAME = L"CS2DebugOverlay_SharedMem";
 constexpr auto EVENT_NAME      = L"CS2DebugOverlay_NewDataEvent";
@@ -35,6 +36,9 @@ constexpr size_t SHARED_MEM_BUFFER_SIZE = 2048 * 2048; // 4MB
 enum class DrawCommandType : std::uint8_t
 {
 	LINE,
+	TRIANGLE,
+	SPHERE,
+	CIRCLE,
 	BBOX,
 	TEXT,
 };
@@ -45,6 +49,33 @@ struct LineCommandData
 
 	Vector start;
 	Vector end;
+};
+
+struct TriangleCommandData
+{
+	TriangleCommandData(const Vector &p1, const Vector &p2, const Vector &p3) : p1(p1), p2(p2), p3(p3) { }
+
+	Vector p1;
+	Vector p2;
+	Vector p3;
+};
+
+struct SphereCommandData
+{
+	SphereCommandData(const Vector &center, float radius) : center(center), radius(radius) { }
+
+	Vector center;
+	float  radius;
+};
+
+struct CircleCommandData
+{
+	CircleCommandData(const Vector &center, const Vector &xAxis, const Vector &yAxis, float radius) : center(center), xAxis(xAxis), yAxis(yAxis), radius(radius) { }
+
+	Vector center;
+	Vector xAxis;
+	Vector yAxis;
+	float  radius;
 };
 
 struct BBoxCommandData
@@ -70,10 +101,12 @@ struct TextCommandData
 
 struct DrawCommandPacket
 {
-	// The server is now responsible for calculating the `drawEndTime`. This improves decoupling.
 	DrawCommandPacket(DrawCommandType type, const Color &color, float drawEndTime, const LineCommandData &line) : type(type), color(color), drawEndTime(drawEndTime), line(line) { }
 	DrawCommandPacket(DrawCommandType type, const Color &color, float drawEndTime, const BBoxCommandData &box) : type(type), color(color), drawEndTime(drawEndTime), box(box) { }
 	DrawCommandPacket(DrawCommandType type, const Color &color, float drawEndTime, const TextCommandData &text) : type(type), color(color), drawEndTime(drawEndTime), text(text) { }
+	DrawCommandPacket(DrawCommandType type, const Color &color, float drawEndTime, const TriangleCommandData &triangle) : type(type), color(color), drawEndTime(drawEndTime), triangle(triangle) { }
+	DrawCommandPacket(DrawCommandType type, const Color &color, float drawEndTime, const SphereCommandData &sphere) : type(type), color(color), drawEndTime(drawEndTime), sphere(sphere) { }
+	DrawCommandPacket(DrawCommandType type, const Color &color, float drawEndTime, const CircleCommandData &circle) : type(type), color(color), drawEndTime(drawEndTime), circle(circle) { }
 
 	DrawCommandType type;
 	Color           color;
@@ -81,9 +114,12 @@ struct DrawCommandPacket
 
 	union
 	{
-		LineCommandData line;
-		BBoxCommandData box;
-		TextCommandData text;
+		LineCommandData     line;
+		BBoxCommandData     box;
+		TextCommandData     text;
+		TriangleCommandData triangle;
+		SphereCommandData   sphere;
+		CircleCommandData   circle;
 	};
 };
 
