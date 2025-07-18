@@ -27,7 +27,7 @@ constexpr auto EVENT_NAME      = L"CS2DebugOverlay_NewDataEvent";
 
 // The size of the circular buffer in shared memory.
 // Must be a power of 2 for efficient bitwise arithmetic on head/tail indices.
-constexpr size_t SHARED_MEM_BUFFER_SIZE = 2048 * 2048; // 1MB
+constexpr size_t SHARED_MEM_BUFFER_SIZE = 2048 * 2048; // 4MB
 
 // --- Packet Definitions ---
 #pragma pack(push, 1)
@@ -41,18 +41,28 @@ enum class DrawCommandType : std::uint8_t
 
 struct LineCommandData
 {
+	LineCommandData(const Vector &start, const Vector &end) : start(start), end(end) { }
+
 	Vector start;
 	Vector end;
 };
 
 struct BBoxCommandData
 {
+	BBoxCommandData(const Vector &mins, const Vector &maxs) : mins(mins), maxs(maxs) { }
+
 	Vector mins;
 	Vector maxs;
 };
 
 struct TextCommandData
 {
+	explicit TextCommandData(const Vector &position, const char *msg) : position(position), onscreen(false)
+	{
+		strncpy_s(text, msg, sizeof(text) - 1);
+		text[sizeof(text) - 1] = '\0'; // Ensure null-termination
+	}
+
 	Vector position;
 	bool   onscreen;
 	char   text[128];
@@ -60,6 +70,11 @@ struct TextCommandData
 
 struct DrawCommandPacket
 {
+	// The server is now responsible for calculating the `drawEndTime`. This improves decoupling.
+	DrawCommandPacket(DrawCommandType type, const Color &color, float drawEndTime, const LineCommandData &line) : type(type), color(color), drawEndTime(drawEndTime), line(line) { }
+	DrawCommandPacket(DrawCommandType type, const Color &color, float drawEndTime, const BBoxCommandData &box) : type(type), color(color), drawEndTime(drawEndTime), box(box) { }
+	DrawCommandPacket(DrawCommandType type, const Color &color, float drawEndTime, const TextCommandData &text) : type(type), color(color), drawEndTime(drawEndTime), text(text) { }
+
 	DrawCommandType type;
 	Color           color;
 	float           drawEndTime;
@@ -74,6 +89,8 @@ struct DrawCommandPacket
 
 struct WorldUpdatePacket
 {
+	WorldUpdatePacket(const QAngle &view_angles, const Vector &origin, float curtime) : viewAngles(view_angles), origin(origin), curtime(curtime) { }
+
 	QAngle viewAngles;
 	Vector origin;
 	float  curtime;
@@ -108,7 +125,8 @@ struct SharedMemoryLayout
 	alignas(64) volatile size_t tail;
 
 	// The data buffer.
-	BYTE buffer[SHARED_MEM_BUFFER_SIZE];
+	// Uses std::byte for type-safety when dealing with raw memory.
+	std::byte buffer[SHARED_MEM_BUFFER_SIZE];
 };
 
 #pragma pack(pop)

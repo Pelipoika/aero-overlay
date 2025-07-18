@@ -25,9 +25,13 @@ public:
 
 private:
 	void ClientThreadWorker(const std::atomic<bool> &running, rlFPCamera &camera);
-	void ProcessPacket(PacketType type, const BYTE *data, uint32_t size, rlFPCamera &camera);
+
+	void ProcessPacket(const PacketHeader &header, const std::byte *data, rlFPCamera &camera);
+
 	void ExpireOldCommands();
 	void ClearDrawCommands();
+
+	void ReadFromBuffer(void *dest, size_t offset, size_t size) const;
 
 	// Threading and synchronization
 	std::thread       m_clientThread;
