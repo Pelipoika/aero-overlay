@@ -14,6 +14,8 @@ bool OverlayRenderer::Initialize(int width, int height, int x, int y)
 	if (m_initialized)
 		return true;
 
+	SetTraceLogLevel(LOG_NONE);
+
 	SetConfigFlags(FLAG_WINDOW_TRANSPARENT | FLAG_WINDOW_MOUSE_PASSTHROUGH |
 	               FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TOPMOST |
 	               FLAG_WINDOW_UNFOCUSED | FLAG_WINDOW_ALWAYS_RUN);

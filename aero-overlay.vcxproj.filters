@@ -33,6 +33,9 @@
     <ClCompile Include="src\window_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\SharedMemoryClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\raylib.h">
@@ -53,9 +56,6 @@
     <ClInclude Include="include\overlay_renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\packets.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\pipe_client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -66,6 +66,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\window_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SharedMemoryClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SharedDefs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

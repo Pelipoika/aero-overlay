@@ -10,11 +10,6 @@ namespace Config
 	// Camera settings
 	constexpr float DEFAULT_FOV = 75.0f;
 
-	// Pipe communication settings
-	constexpr auto PIPE_NAME                = R"(\\.\pipe\CS2DebugOverlay)";
-	constexpr int  PIPE_RETRY_DELAY_SECONDS = 2;
-	constexpr int  PIPE_READ_DELAY_MS       = 2;
-
 	// Rendering settings
 	constexpr size_t MAX_DRAW_COMMANDS = 20000;
 	constexpr int    DEBUG_TEXT_SIZE   = 20;

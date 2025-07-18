@@ -49,11 +49,11 @@ bool OverlayApplication::Initialize()
 	// Initialize camera
 	rlFPCameraInit(&m_camera, Config::DEFAULT_FOV, {0, 0, 0});
 
-	// Initialize pipe client
-	m_pipeClient = std::make_unique<PipeClient>();
-	m_running    = true;
+	// Initialize shared memory client
+	m_memoryClient = std::make_unique<SharedMemoryClient>();
+	m_running      = true;
 
-	if (!m_pipeClient->Start(m_running, m_camera))
+	if (!m_memoryClient->Start(m_running, m_camera))
 	{
 		return false;
 	}
@@ -66,10 +66,10 @@ void OverlayApplication::Shutdown()
 {
 	m_running = false;
 
-	if (m_pipeClient)
+	if (m_memoryClient)
 	{
-		m_pipeClient->Stop();
-		m_pipeClient.reset();
+		m_memoryClient->Stop();
+		m_memoryClient.reset();
 	}
 
 	if (m_renderer)
@@ -88,12 +88,12 @@ void OverlayApplication::MainLoop()
 		// Update camera
 		rlFPCameraUpdate(&m_camera);
 
-		// Get draw commands from pipe client
+		// Get draw commands from shared memory client
 		std::vector<DrawCommandPacket> drawCommands;
 
-		if (m_pipeClient)
+		if (m_memoryClient)
 		{
-			drawCommands = m_pipeClient->GetDrawCommands();
+			drawCommands = m_memoryClient->GetDrawCommands();
 		}
 
 		// Render frame

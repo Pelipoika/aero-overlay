@@ -2,7 +2,7 @@
 
 #include "raylib.h"
 #include "rlFPSCamera.h"
-#include "packets.h"
+#include "SharedDefs.h"
 #include <vector>
 
 class OverlayRenderer
