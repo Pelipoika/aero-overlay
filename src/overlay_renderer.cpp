@@ -107,10 +107,12 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 	{
 		if (cmd.type == DrawCommandType::TEXT)
 		{
+			const int text_width = (MeasureText(cmd.text.text, Config::DEBUG_TEXT_SIZE) / 2);
+
 			if (cmd.text.onscreen)
 			{
 				DrawText(cmd.text.text,
-				         static_cast<int>(cmd.text.position.x),
+				         static_cast<int>(cmd.text.position.x) - text_width,
 				         static_cast<int>(cmd.text.position.y),
 				         Config::DEBUG_TEXT_SIZE,
 				         cmd.color);
@@ -130,7 +132,7 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 					continue;
 
 				DrawText(cmd.text.text,
-				         static_cast<int>(screenPos.x),
+				         static_cast<int>(screenPos.x) - text_width,
 				         static_cast<int>(screenPos.y),
 				         Config::DEBUG_TEXT_SIZE,
 				         cmd.color);
