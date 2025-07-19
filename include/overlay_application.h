@@ -13,6 +13,11 @@ public:
 	OverlayApplication();
 	~OverlayApplication();
 
+	OverlayApplication(const OverlayApplication &other)                = delete;
+	OverlayApplication(OverlayApplication &&other) noexcept            = delete;
+	OverlayApplication &operator=(const OverlayApplication &other)     = delete;
+	OverlayApplication &operator=(OverlayApplication &&other) noexcept = delete;
+
 	int Run();
 
 private:

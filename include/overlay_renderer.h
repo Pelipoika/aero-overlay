@@ -11,6 +11,11 @@ public:
 	OverlayRenderer();
 	~OverlayRenderer();
 
+	OverlayRenderer(const OverlayRenderer &other)                = delete;
+	OverlayRenderer(OverlayRenderer &&other) noexcept            = delete;
+	OverlayRenderer &operator=(const OverlayRenderer &other)     = delete;
+	OverlayRenderer &operator=(OverlayRenderer &&other) noexcept = delete;
+
 	bool Initialize(int width, int height, int x, int y);
 	void Shutdown();
 
@@ -18,14 +23,13 @@ public:
 	void EndFrame() const;
 
 	void RenderCommands(const std::vector<DrawCommandPacket> &commands, const rlFPCamera &camera) const;
-	void RenderDebugInfo();
 
-	bool ShouldClose() const;
+	static void RenderDebugInfo();
+	static bool ShouldClose();
 
 private:
 	static void Render3DCommands(const std::vector<DrawCommandPacket> &commands, const rlFPCamera &camera);
 	static void Render2DCommands(const std::vector<DrawCommandPacket> &commands, const rlFPCamera &camera);
 
-	bool                 m_initialized;
-	static constexpr int TARGET_FPS = 144;
+	bool m_initialized;
 };

@@ -2,11 +2,6 @@
 
 #include <iostream>
 
-SharedMemoryClient::SharedMemoryClient()
-{
-	// Constructor
-}
-
 SharedMemoryClient::~SharedMemoryClient()
 {
 	Stop();

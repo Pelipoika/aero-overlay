@@ -28,7 +28,7 @@ constexpr auto EVENT_NAME      = L"CS2DebugOverlay_NewDataEvent";
 
 // The size of the circular buffer in shared memory.
 // Must be a power of 2 for efficient bitwise arithmetic on head/tail indices.
-constexpr size_t SHARED_MEM_BUFFER_SIZE = 2048 * 2048; // 4MB
+constexpr size_t SHARED_MEM_BUFFER_SIZE = static_cast<size_t>(2048) * static_cast<size_t>(2048); // 4MB
 
 // --- Packet Definitions ---
 #pragma pack(push, 1)

@@ -180,7 +180,7 @@ void OverlayRenderer::RenderDebugInfo()
 	DrawFPS(100, 100);
 }
 
-bool OverlayRenderer::ShouldClose() const
+bool OverlayRenderer::ShouldClose()
 {
 	return WindowShouldClose();
 }

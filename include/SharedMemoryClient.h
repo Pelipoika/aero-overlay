@@ -11,8 +11,13 @@
 class SharedMemoryClient
 {
 public:
-	SharedMemoryClient();
+	SharedMemoryClient() = default;
 	~SharedMemoryClient();
+
+	SharedMemoryClient(const SharedMemoryClient &other)                = delete;
+	SharedMemoryClient(SharedMemoryClient &&other) noexcept            = delete;
+	SharedMemoryClient &operator=(const SharedMemoryClient &other)     = delete;
+	SharedMemoryClient &operator=(SharedMemoryClient &&other) noexcept = delete;
 
 	// Connects to the shared memory and starts the listening thread.
 	bool Start(std::atomic<bool> &running, rlFPCamera &camera);

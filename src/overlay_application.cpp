@@ -1,7 +1,7 @@
 #include "overlay_application.h"
 #include "config.h"
-#include <iostream>
 #include <cstdio>
+#include <print>
 
 OverlayApplication::OverlayApplication() : m_camera(), m_running(false) { }
 
@@ -14,7 +14,7 @@ int OverlayApplication::Run()
 {
 	if (!Initialize())
 	{
-		fprintf(stderr, "Failed to initialize overlay application\n");
+		std::println(stderr, "Failed to initialize overlay application");
 		return -1;
 	}
 
@@ -58,7 +58,7 @@ bool OverlayApplication::Initialize()
 		return false;
 	}
 
-	printf("Overlay application initialized successfully\n");
+	std::println("Overlay application initialized successfully");
 	return true;
 }
 
@@ -83,7 +83,7 @@ void OverlayApplication::Shutdown()
 
 void OverlayApplication::MainLoop()
 {
-	while (!m_renderer->ShouldClose() && m_running)
+	while (!OverlayRenderer::ShouldClose() && m_running)
 	{
 		// Update camera
 		rlFPCameraUpdate(&m_camera);
