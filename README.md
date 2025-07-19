@@ -1,68 +1,29 @@
 # CS2 Debug Overlay
 
-A transparent debug overlay application for Counter-Strike 2 that receives drawing commands via named pipes and renders them using raylib.
+A lightweight, transparent overlay for Counter-Strike 2, rendering real-time debug visuals via shared memory.
 
-### Core Components
+## Features
+- **Transparent overlay** auto-attaches to CS2 window
+- **Draw commands**: 3D lines, text (screen/world), world updates
+- **Real-time rendering** with raylib
+- **Thread-safe** command handling
+- **Windows only**
 
-#### 1. **OverlayApplication** (`include/overlay_application.h`, `src/overlay_application.cpp`)
-- Main application orchestrator
-- Manages lifecycle of all components
-- Coordinates initialization and shutdown
-- Handles the main game loop
+## Quick Start
+1. Build with C++17 and raylib
+2. Launch CS2
+3. Run the overlay (auto-detects CS2 window)
 
-#### 2. **OverlayRenderer** (`include/overlay_renderer.h`, `src/overlay_renderer.cpp`)
-- Handles all rendering operations using raylib
-- Manages 3D and 2D drawing commands
-- Provides frame management (begin/end)
-- Renders debug information
+## Main Components
+- OverlayApplication: App lifecycle & main loop
+- OverlayRenderer: All rendering (raylib)
+- SharedMemoryClient/PipeClient: Receives draw commands
+- WindowManager: Handles overlay window
 
-#### 3. **PipeClient** (`include/pipe_client.h`, `src/pipe_client.cpp`) [Windows only]
-- Manages named pipe communication with CS2
-- Processes incoming packets in a separate thread
-- Thread-safe command storage and retrieval
-- Automatic reconnection on pipe failures
+## Requirements
+- C++17 compiler
+- raylib
+- Windows SDK
 
-#### 4. **WindowManager** (`include/window_manager.h`, `src/window_manager.cpp`) [Windows only]
-- Handles target window detection (CS2 window)
-- Manages window positioning and sizing
-- Provides window boundary information
-
-#### 5. **Packet Definitions** (`include/packets.h`)
-- Defines all communication protocols
-- Packet structures for drawing commands
-- World update information
-
-### Key Features
-
-- **Modular Design**: Each component has a single responsibility
-- **Platform Abstraction**: Windows-specific code is isolated
-- **Thread Safety**: Proper synchronization for multi-threaded operations
-- **Resource Management**: RAII-based resource handling
-- **Error Handling**: Comprehensive error checking and reporting
-- **Extensibility**: Easy to add new drawing commands or features
-
-### Build Requirements
-
-- C++17 compatible compiler
-- raylib library
-- Windows SDK (for Windows builds)
-
-### Usage
-
-The application automatically:
-1. Finds the Counter-Strike 2 window
-2. Creates a transparent overlay matching the game window
-3. Connects to the named pipe for receiving draw commands
-4. Renders received commands in real-time
-
-### Drawing Commands Supported
-
-- **Lines**: 3D line drawing between two points
-- **Text**: Both screen-space and world-space text rendering
-- **World Updates**: Camera position and orientation synchronization
-
-### Thread Architecture
-
-- **Main Thread**: Handles rendering and UI updates
-- **Packet Thread**: Manages named pipe communication (Windows only)
-- **Synchronization**: Mutex-protected shared data structures
+---
+Easy to extend for new debug visuals. For details, see source code and headers.

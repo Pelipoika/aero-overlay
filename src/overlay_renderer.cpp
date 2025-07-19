@@ -14,7 +14,7 @@ bool OverlayRenderer::Initialize(const int width, const int height, const int x,
 	if (m_initialized)
 		return true;
 
-	SetTraceLogLevel(LOG_NONE);
+	SetTraceLogLevel(LOG_ERROR);
 
 	SetConfigFlags(FLAG_WINDOW_TRANSPARENT | FLAG_WINDOW_MOUSE_PASSTHROUGH |
 	               FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TOPMOST |
@@ -112,7 +112,7 @@ void OverlayRenderer::Render3DCommands(const std::vector<DrawCommandPacket> &com
 			}
 			case DrawCommandType::TEXT:
 			{
-				// Handled in Render3DCommands
+				// Handled in Render2DCommands
 				break;
 			}
 			default:  // NOLINT(clang-diagnostic-covered-switch-default)
