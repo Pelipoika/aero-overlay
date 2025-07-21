@@ -9,6 +9,9 @@ SharedMemoryClient::~SharedMemoryClient()
 
 bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 {
+	// Initialize the last world update time
+	m_lastWorldUpdateTime = std::chrono::steady_clock::now();
+
 	// 1. Open the event used for signaling.
 	m_hEvent = OpenEventW(SYNCHRONIZE, FALSE, EVENT_NAME);
 	if (m_hEvent == nullptr)
@@ -172,7 +175,11 @@ void SharedMemoryClient::ClientThreadWorker(const std::atomic<bool> &running, rl
 		const DWORD waitResult = WaitForSingleObject(m_hEvent, 30); // 30ms timeout
 
 		if (waitResult != WAIT_OBJECT_0)
+		{
+			// Check if we haven't received a world update in 5 seconds
+			CheckWorldUpdateTimeout();
 			continue; // Timeout or error, loop again.
+		}
 
 		// Use a memory barrier to ensure we see the head value that was set *after*
 		// the server finished writing the data.
@@ -256,9 +263,12 @@ void SharedMemoryClient::ProcessPacket(const PacketHeader &header, const std::by
 
 			const auto &worldUpdate = *reinterpret_cast<const WorldUpdatePacket*>(data);
 
-			if (worldUpdate.curtime < m_currentTime)
+			// Update the last world update timestamp
+			m_lastWorldUpdateTime = std::chrono::steady_clock::now();
+
+			if (std::fabs(worldUpdate.curtime - m_currentTime) > 1.f)
 			{
-				// Server has restarted (Got a lower time then we had previously), clear all previous commands.
+				// Got a large time jump, clear all commands.
 				ClearDrawCommands();
 			}
 
@@ -295,6 +305,12 @@ std::vector<DrawCommandPacket> SharedMemoryClient::GetDrawCommands()
 void SharedMemoryClient::ClearDrawCommands()
 {
 	std::lock_guard lock(m_drawMutex);
+
+	if (!m_drawCommands.empty())
+	{
+		std::cout << "Client: Clearing " << m_drawCommands.size() << " draw commands.\n";
+	}
+
 	m_drawCommands.clear();
 }
 
@@ -309,4 +325,19 @@ void SharedMemoryClient::ExpireOldCommands()
 			              return m_currentTime > 0.0f;
 		              return m_currentTime >= cmd.drawEndTime;
 	              });
+}
+
+void SharedMemoryClient::CheckWorldUpdateTimeout()
+{
+	const auto now                 = std::chrono::steady_clock::now();
+	const auto timeSinceLastUpdate = now - m_lastWorldUpdateTime;
+
+	if (timeSinceLastUpdate >= WORLD_UPDATE_TIMEOUT)
+	{
+		// Haven't received a world update in 5 seconds, clear all draw commands
+		ClearDrawCommands();
+
+		// Reset the timer to prevent spamming clear operations
+		m_lastWorldUpdateTime = now;
+	}
 }

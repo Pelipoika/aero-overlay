@@ -4,6 +4,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <chrono>
 
 #include "SharedDefs.h"
 #include "Raylib/rlFPSCamera.h"
@@ -35,6 +36,7 @@ private:
 
 	void ExpireOldCommands();
 	void ClearDrawCommands();
+	void CheckWorldUpdateTimeout();
 
 	void ReadFromBuffer(void *dest, size_t offset, size_t size) const;
 
@@ -49,8 +51,10 @@ private:
 	SharedMemoryLayout *m_pSharedMem = nullptr;
 
 	// Local state
-	std::vector<DrawCommandPacket> m_drawCommands;
-	float                          m_currentTime = 0.0f;
+	std::vector<DrawCommandPacket>        m_drawCommands;
+	float                                 m_currentTime = 0.0f;
+	std::chrono::steady_clock::time_point m_lastWorldUpdateTime;
 
-	static constexpr size_t MAX_DRAW_COMMANDS = 2000;
+	static constexpr size_t MAX_DRAW_COMMANDS    = 2000;
+	static constexpr auto   WORLD_UPDATE_TIMEOUT = std::chrono::seconds(5);
 };
