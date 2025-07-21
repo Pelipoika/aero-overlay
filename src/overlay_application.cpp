@@ -12,10 +12,10 @@ OverlayApplication::~OverlayApplication()
 
 int OverlayApplication::Run()
 {
-	if (!Initialize())
+	while (!Initialize())
 	{
-		std::println(stderr, "Failed to initialize overlay application");
-		return -1;
+		std::println(stderr, "Failed to initialize overlay application, retrying in 2 seconds.");
+		std::this_thread::sleep_for(std::chrono::seconds(2));
 	}
 
 	MainLoop();
@@ -39,13 +39,6 @@ bool OverlayApplication::Initialize()
 		return false;
 	}
 
-	// Initialize renderer
-	m_renderer = std::make_unique<OverlayRenderer>();
-	if (!m_renderer->Initialize(width, height, x, y))
-	{
-		return false;
-	}
-
 	// Initialize camera
 	rlFPCameraInit(&m_camera, Config::DEFAULT_FOV, {0, 0, 0});
 
@@ -54,6 +47,13 @@ bool OverlayApplication::Initialize()
 	m_running      = true;
 
 	if (!m_memoryClient->Start(m_running, m_camera))
+	{
+		return false;
+	}
+
+	// Initialize renderer
+	m_renderer = std::make_unique<OverlayRenderer>();
+	if (!m_renderer->Initialize(width, height, x, y))
 	{
 		return false;
 	}
