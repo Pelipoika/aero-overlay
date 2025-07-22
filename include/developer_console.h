@@ -7,7 +7,7 @@
 
 #include "Raylib/raylib.h"
 
-enum class LogLevel
+enum class LogLevel : std::uint8_t
 {
 	INFO,
 	WARNING,
@@ -29,6 +29,11 @@ class DeveloperConsole
 public:
 	DeveloperConsole();
 	~DeveloperConsole() = default;
+
+	DeveloperConsole(const DeveloperConsole &other)                = delete;
+	DeveloperConsole(DeveloperConsole &&other) noexcept            = delete;
+	DeveloperConsole &operator=(const DeveloperConsole &other)     = delete;
+	DeveloperConsole &operator=(DeveloperConsole &&other) noexcept = delete;
 
 	// Singleton access
 	static DeveloperConsole &GetInstance();

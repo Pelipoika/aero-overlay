@@ -55,7 +55,7 @@ void rlFPCameraInit(rlFPCamera *camera, const float fovY, const Vector3 position
 	camera->ViewCamera.position = position;
 	camera->ViewCamera.position.y += camera->PlayerEyesPosition;
 	camera->ViewCamera.target     = Vector3Add(camera->ViewCamera.position, {0, 0, camera->TargetDistance});
-	camera->ViewCamera.up         = {0.0f, 1.0f, 0.0f};
+	camera->ViewCamera.up         = {.x = 0.0f, .y = 1.0f, .z = 0.0f};
 	camera->ViewCamera.fovy       = fovY;
 	camera->ViewCamera.projection = CAMERA_PERSPECTIVE;
 
@@ -115,7 +115,7 @@ void rlFPCameraUpdate(rlFPCamera *camera)
 	camera->Forward = Vector3Transform({0, 0, 1},
 	                                   MatrixRotateZYX({0, -camera->ViewAngles.x, 0}));
 
-	camera->Right = {camera->Forward.z * -1.0f, 0, camera->Forward.x};
+	camera->Right = {.x = camera->Forward.z * -1.0f, .y = 0, .z = camera->Forward.x};
 
 	camera->ViewCamera.position = camera->CameraPosition;
 

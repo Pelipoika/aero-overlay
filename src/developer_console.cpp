@@ -17,7 +17,7 @@ DeveloperConsole &DeveloperConsole::GetInstance()
 
 void DeveloperConsole::AddMessage(const std::string &message, LogLevel level)
 {
-	std::lock_guard<std::mutex> lock(m_messagesMutex);
+	std::lock_guard lock(m_messagesMutex);
 
 	// Add new message
 	m_messages.emplace_back(message, level);
@@ -25,7 +25,8 @@ void DeveloperConsole::AddMessage(const std::string &message, LogLevel level)
 	// Remove oldest messages if we exceed the limit
 	if (m_messages.size() > m_maxMessages)
 	{
-		m_messages.erase(m_messages.begin(), m_messages.begin() + (m_messages.size() - m_maxMessages));
+		const auto numToRemove = static_cast<std::vector<ConsoleMessage>::difference_type>(m_messages.size() - m_maxMessages);
+		m_messages.erase(m_messages.begin(), std::next(m_messages.begin(), numToRemove));
 	}
 }
 
@@ -46,7 +47,7 @@ void DeveloperConsole::AddError(const std::string &message)
 
 void DeveloperConsole::Update()
 {
-	std::lock_guard<std::mutex> lock(m_messagesMutex);
+	std::lock_guard lock(m_messagesMutex);
 
 	const auto now = std::chrono::steady_clock::now();
 
@@ -68,7 +69,7 @@ void DeveloperConsole::Update()
 
 void DeveloperConsole::Render()
 {
-	std::lock_guard<std::mutex> lock(m_messagesMutex);
+	std::lock_guard lock(m_messagesMutex);
 
 	int yOffset = m_marginY;
 
@@ -119,7 +120,7 @@ void DeveloperConsole::Render()
 
 void DeveloperConsole::Clear()
 {
-	std::lock_guard<std::mutex> lock(m_messagesMutex);
+	std::lock_guard lock(m_messagesMutex);
 	m_messages.clear();
 }
 
