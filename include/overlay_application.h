@@ -1,8 +1,5 @@
 #pragma once
 
-#include <atomic>
-#include <memory>
-
 #include "overlay_renderer.h"
 #include "SharedMemoryClient.h"
 #include "window_manager.h"
@@ -24,6 +21,7 @@ private:
 	bool InitializeWindow();
 	bool Initialize();
 	void UpdateTargetWindowBounds();
+	void UpdateMemoryClientConnection();
 	void Shutdown();
 	void MainLoop();
 
@@ -31,7 +29,9 @@ private:
 	std::unique_ptr<SharedMemoryClient> m_memoryClient;
 	std::unique_ptr<WindowManager>      m_windowManager;
 
-	rlFPCamera        m_camera;
-	std::atomic<bool> m_running;
-	bool              m_targetWindowFound;
+	rlFPCamera                            m_camera;
+	std::atomic<bool>                     m_running;
+	bool                                  m_targetWindowFound;
+	bool                                  m_memoryClientConnected;
+	std::chrono::steady_clock::time_point m_lastMemoryClientRetry;
 };

@@ -29,6 +29,9 @@ public:
 	// Gets the latest draw commands for the rendering loop.
 	std::vector<DrawCommandPacket> GetDrawCommands();
 
+	// Check if the client is currently connected to the server
+	bool IsConnected() const;
+
 private:
 	void ClientThreadWorker(const std::atomic<bool> &running, rlFPCamera &camera);
 

@@ -40,7 +40,7 @@ public:
 	void AddError(const std::string &message);
 
 	// Update console state (call each frame)
-	void Update(float deltaTime);
+	void Update();
 
 	// Render the console overlay
 	void Render();

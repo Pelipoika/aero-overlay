@@ -20,8 +20,8 @@ public:
 	bool Initialize(int width, int height, int x, int y);
 	void Shutdown();
 
-	void BeginFrame();
-	void EndFrame();
+	void BeginFrame() const;
+	void EndFrame() const;
 
 	void RenderCommands(const std::vector<DrawCommandPacket> &commands, const rlFPCamera &camera) const;
 

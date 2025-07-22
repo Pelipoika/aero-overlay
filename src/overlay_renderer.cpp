@@ -130,7 +130,7 @@ void OverlayRenderer::UnloadCustomFont()
 	}
 }
 
-void OverlayRenderer::BeginFrame()
+void OverlayRenderer::BeginFrame() const
 {
 	if (!m_initialized)
 		return;
@@ -138,14 +138,14 @@ void OverlayRenderer::BeginFrame()
 	// Update console with delta time
 	if (m_console)
 	{
-		m_console->Update(GetFrameTime());
+		m_console->Update();
 	}
 
 	BeginDrawing();
 	ClearBackground(BLANK);
 }
 
-void OverlayRenderer::EndFrame()
+void OverlayRenderer::EndFrame() const
 {
 	if (!m_initialized)
 		return;

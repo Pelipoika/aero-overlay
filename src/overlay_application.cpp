@@ -1,9 +1,8 @@
-#include "overlay_application.h"
+﻿#include "overlay_application.h"
 #include "config.h"
 #include "developer_console.h"
-#include <chrono>
 
-OverlayApplication::OverlayApplication() : m_camera(), m_running(false), m_targetWindowFound(false) { }
+OverlayApplication::OverlayApplication() : m_camera(), m_running(false), m_targetWindowFound(false), m_memoryClientConnected(false) { }
 
 OverlayApplication::~OverlayApplication()
 {
@@ -93,12 +92,21 @@ bool OverlayApplication::Initialize()
 {
 	DEV_LOG_INFO("Initializing overlay application components...");
 
+	// Initialize shared memory client
 	m_memoryClient = std::make_unique<SharedMemoryClient>();
 	m_running      = true;
 
-	if (!m_memoryClient->Start(m_running, m_camera))
+	// Try initial connection - this sets up the retry timing regardless of success
+	m_lastMemoryClientRetry = std::chrono::steady_clock::now();
+	m_memoryClientConnected = m_memoryClient->Start(m_running, m_camera);
+
+	if (m_memoryClientConnected)
 	{
-		DEV_LOG_WARNING("Failed to start shared memory client - will retry during runtime");
+		DEV_LOG_INFO("Shared memory client connected successfully");
+	}
+	else
+	{
+		DEV_LOG_WARNING("Failed to start shared memory client - will retry every 5 seconds");
 	}
 
 	DEV_LOG_INFO("Debug overlay components initialized successfully");
@@ -127,11 +135,13 @@ void OverlayApplication::UpdateTargetWindowBounds()
 			// Only check every few seconds to avoid spam
 			static auto lastCheck = std::chrono::steady_clock::now();
 			auto        now       = std::chrono::steady_clock::now();
+
 			if (std::chrono::duration_cast<std::chrono::seconds>(now - lastCheck).count() >= 5)
 			{
 				lastCheck = now;
 				DEV_LOG_INFO("Still waiting for target window: " + std::string(Config::TARGET_WINDOW_TITLE));
 			}
+
 			return;
 		}
 	}
@@ -171,6 +181,74 @@ void OverlayApplication::UpdateTargetWindowBounds()
 	}
 }
 
+void OverlayApplication::UpdateMemoryClientConnection()
+{
+	if (!m_memoryClient)
+		return;
+
+	// Check current connection status
+	bool currentlyConnected = m_memoryClient->IsConnected();
+
+	// If we lost connection, log it and mark as disconnected
+	if (m_memoryClientConnected && !currentlyConnected)
+	{
+		DEV_LOG_WARNING("Lost connection to shared memory server");
+		m_memoryClientConnected = false;
+		m_lastMemoryClientRetry = std::chrono::steady_clock::now(); // Reset retry timer
+	}
+
+	// If already connected, nothing more to do
+	if (currentlyConnected)
+	{
+		// Update status if we weren't connected before
+		if (!m_memoryClientConnected)
+		{
+			DEV_LOG_INFO("Shared memory client is now connected and ready");
+		}
+		m_memoryClientConnected = true;
+		return;
+	}
+
+	// Check if enough time has passed since last retry (5 seconds for better responsiveness)
+	auto now = std::chrono::steady_clock::now();
+	if (std::chrono::duration_cast<std::chrono::seconds>(now - m_lastMemoryClientRetry).count() < 5)
+	{
+		return; // Wait at least 5 seconds between retries
+	}
+
+	// Update retry timestamp
+	m_lastMemoryClientRetry = now;
+
+	// Try to reconnect (reduce log spam with smarter logging)
+	static int retryCount = 0;
+	retryCount++;
+
+	// Log first attempt and every 5th attempt after that
+	if (retryCount == 1 || retryCount % 5 == 0)
+	{
+		DEV_LOG_INFO("Attempting to reconnect to shared memory server... (attempt " + std::to_string(retryCount) + ")");
+	}
+
+	// Ensure we properly stop any existing connection first
+	m_memoryClient->Stop();
+
+	// Small delay to ensure cleanup is complete
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+	// Try to start again
+	m_memoryClientConnected = m_memoryClient->Start(m_running, m_camera);
+
+	if (m_memoryClientConnected)
+	{
+		DEV_LOG_INFO("Successfully reconnected to shared memory server after " + std::to_string(retryCount) + " attempts");
+		retryCount = 0; // Reset counter on successful connection
+	}
+	else if (retryCount % 10 == 0) // Log failure every 10th attempt to reduce spam
+	{
+		DEV_LOG_WARNING("Still unable to connect to shared memory server after " + std::to_string(retryCount) + " attempts - will keep trying");
+	}
+}
+
 void OverlayApplication::Shutdown()
 {
 	m_running = false;
@@ -198,15 +276,36 @@ void OverlayApplication::MainLoop()
 		// Update target window bounds (find target window or resize to match)
 		UpdateTargetWindowBounds();
 
+		// Update memory client connection (retry if disconnected)
+		UpdateMemoryClientConnection();
+
 		// Update camera
 		rlFPCameraUpdate(&m_camera);
 
 		// Get draw commands from shared memory client
 		std::vector<DrawCommandPacket> drawCommands;
 
-		if (m_memoryClient)
+		if (m_memoryClient && m_memoryClient->IsConnected())
 		{
 			drawCommands = m_memoryClient->GetDrawCommands();
+		}
+
+		// Update connection status display
+		static bool lastConnectionStatus    = false;
+		bool        currentConnectionStatus = m_memoryClient && m_memoryClient->IsConnected();
+
+		if (currentConnectionStatus != lastConnectionStatus)
+		{
+			if (currentConnectionStatus)
+			{
+				DEV_LOG_INFO("Connected to shared memory server");
+			}
+			else
+			{
+				DEV_LOG_WARNING("Disconnected from shared memory server");
+			}
+
+			lastConnectionStatus = currentConnectionStatus;
 		}
 
 		// Render frame

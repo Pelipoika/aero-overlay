@@ -44,7 +44,7 @@ void DeveloperConsole::AddError(const std::string &message)
 	AddMessage(message, LogLevel::ERROR);
 }
 
-void DeveloperConsole::Update(float deltaTime)
+void DeveloperConsole::Update()
 {
 	std::lock_guard<std::mutex> lock(m_messagesMutex);
 
