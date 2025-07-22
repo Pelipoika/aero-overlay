@@ -65,8 +65,8 @@ private:
 	// Rendering settings
 	int m_fontSize    = 14;
 	int m_lineSpacing = 18;
-	int m_marginX     = 10;
-	int m_marginY     = 10;
+	int m_marginX     = 40;
+	int m_marginY     = 40;
 
 	// Helper functions
 	Color GetColorForLevel(LogLevel level, float alpha) const;

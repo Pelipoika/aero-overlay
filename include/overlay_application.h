@@ -21,7 +21,9 @@ public:
 	int Run();
 
 private:
+	bool InitializeWindow();
 	bool Initialize();
+	void UpdateTargetWindowBounds();
 	void Shutdown();
 	void MainLoop();
 
@@ -31,4 +33,5 @@ private:
 
 	rlFPCamera        m_camera;
 	std::atomic<bool> m_running;
+	bool              m_targetWindowFound;
 };

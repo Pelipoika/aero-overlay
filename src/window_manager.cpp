@@ -10,7 +10,6 @@ bool WindowManager::FindTargetWindow(const char *windowTitle)
 
 	if (!m_targetWindow)
 	{
-		DEV_LOG_WARNING("Could not find window: " + std::string(windowTitle));
 		return false;
 	}
 

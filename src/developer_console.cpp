@@ -92,7 +92,7 @@ void DeveloperConsole::Render()
 		}
 
 		// Draw semi-transparent dark background with subtle border
-		const Color bgColor = {0, 0, 0, static_cast<unsigned char>(120 * message.alpha)};
+		const Color bgColor = {0, 0, 0, static_cast<unsigned char>(255 * message.alpha)};
 
 		// Background rectangle
 		DrawRectangle(m_marginX - 4, yOffset - 2, textWidth + 8, m_fontSize + 4, bgColor);
