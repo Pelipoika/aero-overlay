@@ -1,5 +1,5 @@
 #include "window_manager.h"
-#include <iostream>
+#include "developer_console.h"
 
 WindowManager::WindowManager() : m_targetWindow(nullptr), m_windowTitle(nullptr) { }
 
@@ -10,10 +10,11 @@ bool WindowManager::FindTargetWindow(const char *windowTitle)
 
 	if (!m_targetWindow)
 	{
-		std::cerr << "Could not find window: " << windowTitle << '\n';
+		DEV_LOG_WARNING("Could not find window: " + std::string(windowTitle));
 		return false;
 	}
 
+	DEV_LOG_INFO("Found target window: " + std::string(windowTitle));
 	return true;
 }
 
@@ -25,7 +26,7 @@ bool WindowManager::GetWindowBounds(int &x, int &y, int &width, int &height) con
 	RECT rect;
 	if (!GetWindowRect(m_targetWindow, &rect))
 	{
-		std::cerr << "Failed to get window rectangle" << '\n';
+		DEV_LOG_ERROR("Failed to get window rectangle");
 		return false;
 	}
 

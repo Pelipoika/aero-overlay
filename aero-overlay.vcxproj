@@ -119,7 +119,7 @@
       <PreprocessorDefinitions>PLATFORM_DESKTOP;GRAPHICS_API_OPENGL_33;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>dwmapi.lib;d3d9.lib;raylib.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
@@ -160,7 +160,7 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>dwmapi.lib;d3d9.lib;raylib.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -168,6 +168,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\developer_console.cpp" />
     <ClCompile Include="src\SharedMemoryClient.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\overlay_application.cpp" />
@@ -177,6 +178,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\config.h" />
+    <ClInclude Include="include\developer_console.h" />
     <ClInclude Include="include\overlay_application.h" />
     <ClInclude Include="include\overlay_renderer.h" />
     <ClInclude Include="include\Raylib\raylib.h" />

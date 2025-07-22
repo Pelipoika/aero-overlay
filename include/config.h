@@ -18,4 +18,10 @@ namespace Config
 	constexpr float DEBUG_CYLINDER_RADIUS = 20.0f;
 	constexpr float DEBUG_CYLINDER_HEIGHT = 100.0f;
 	constexpr int   DEBUG_CYLINDER_SLICES = 10;
+
+	// Developer console settings (Source Engine inspired)
+	constexpr int   CONSOLE_FONT_SIZE        = 12;		// Slightly smaller for more messages
+	constexpr int   CONSOLE_MAX_MESSAGES     = 20;		// More messages visible
+	constexpr float CONSOLE_MESSAGE_LIFETIME = 10.0f;	// 4 seconds at full opacity
+	constexpr float CONSOLE_FADE_TIME        = 1.5f;	// 1.5 second fade out
 }

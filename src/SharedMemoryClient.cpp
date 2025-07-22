@@ -1,6 +1,5 @@
 #include "SharedMemoryClient.h"
-
-#include <iostream>
+#include "developer_console.h"
 
 SharedMemoryClient::~SharedMemoryClient()
 {
@@ -16,20 +15,21 @@ bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 	m_hEvent = OpenEventW(SYNCHRONIZE, FALSE, EVENT_NAME);
 	if (m_hEvent == nullptr)
 	{
-		const DWORD error = GetLastError();
-		std::cerr << "Client: OpenEvent failed, GLE=" << error;
+		const DWORD error    = GetLastError();
+		std::string errorMsg = "Client: OpenEvent failed, GLE=" + std::to_string(error);
 		switch (error)
 		{
 			case ERROR_FILE_NOT_FOUND:
-				std::cerr << " (Event not found - server may not be running)";
+				errorMsg += " (Event not found - server may not be running)";
 				break;
 			case ERROR_ACCESS_DENIED:
-				std::cerr << " (Access denied - insufficient permissions)";
+				errorMsg += " (Access denied - insufficient permissions)";
 				break;
 			default:
 				break;
 		}
-		std::cerr << ". Is the server running?\n";
+		errorMsg += ". Is the server running?";
+		DEV_LOG_ERROR(errorMsg);
 		return false;
 	}
 
@@ -42,20 +42,20 @@ bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 
 	if (m_hMapFile == nullptr)
 	{
-		const DWORD error = GetLastError();
-		std::cerr << "Client: OpenFileMapping failed, GLE=" << error;
+		const DWORD error    = GetLastError();
+		std::string errorMsg = "Client: OpenFileMapping failed, GLE=" + std::to_string(error);
 		switch (error)
 		{
 			case ERROR_FILE_NOT_FOUND:
-				std::cerr << " (Shared memory not found - server may not be running)";
+				errorMsg += " (Shared memory not found - server may not be running)";
 				break;
 			case ERROR_ACCESS_DENIED:
-				std::cerr << " (Access denied - insufficient permissions)";
+				errorMsg += " (Access denied - insufficient permissions)";
 				break;
 			default:
 				break;
 		}
-		std::cerr << "\n";
+		DEV_LOG_ERROR(errorMsg);
 		Stop();
 		return false;
 	}
@@ -71,23 +71,23 @@ bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 
 	if (m_pSharedMem == nullptr)
 	{
-		const DWORD error = GetLastError();
-		std::cerr << "Client: MapViewOfFile failed, GLE=" << error;
+		const DWORD error    = GetLastError();
+		std::string errorMsg = "Client: MapViewOfFile failed, GLE=" + std::to_string(error);
 		switch (error)
 		{
 			case ERROR_ACCESS_DENIED:
-				std::cerr << " (Access denied - permission mismatch or insufficient privileges)";
+				errorMsg += " (Access denied - permission mismatch or insufficient privileges)";
 				break;
 			case ERROR_INVALID_PARAMETER:
-				std::cerr << " (Invalid parameter - size or offset issue)";
+				errorMsg += " (Invalid parameter - size or offset issue)";
 				break;
 			case ERROR_NOT_ENOUGH_MEMORY:
-				std::cerr << " (Not enough memory)";
+				errorMsg += " (Not enough memory)";
 				break;
 			default:
 				break;
 		}
-		std::cerr << "\n";
+		DEV_LOG_ERROR(errorMsg);
 		Stop();
 		return false;
 	}
@@ -99,12 +99,12 @@ bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << "Failed to start client thread: " << e.what() << '\n';
+		DEV_LOG_ERROR("Failed to start client thread: " + std::string(e.what()));
 		Stop();
 		return false;
 	}
 
-	std::cout << "Client: Connected to shared memory successfully.\n";
+	DEV_LOG_INFO("Client: Connected to shared memory successfully");
 	return true;
 }
 
@@ -201,7 +201,7 @@ void SharedMemoryClient::ClientThreadWorker(const std::atomic<bool> &running, rl
 			// the buffer is likely corrupted. We can try to recover by skipping all data.
 			if (totalPacketSize > SHARED_MEM_BUFFER_SIZE)
 			{
-				std::cerr << "Client: Corrupted packet detected (size too large). Flushing buffer.\n";
+				DEV_LOG_ERROR("Client: Corrupted packet detected (size too large). Flushing buffer.");
 				m_pSharedMem->tail = head; // Skip all pending data.
 				break;
 			}
@@ -228,7 +228,7 @@ void SharedMemoryClient::ClientThreadWorker(const std::atomic<bool> &running, rl
 			head = m_pSharedMem->head;
 		}
 	}
-	std::cout << "Client worker thread finished.\n";
+	DEV_LOG_INFO("Client worker thread finished");
 }
 
 void SharedMemoryClient::ProcessPacket(const PacketHeader &header, const std::byte *data, rlFPCamera &camera)
@@ -239,8 +239,8 @@ void SharedMemoryClient::ProcessPacket(const PacketHeader &header, const std::by
 		{
 			if (header.size != sizeof(DrawCommandPacket))
 			{
-				std::cerr << "Client: Received DRAW_COMMAND with incorrect size. Expected "
-						<< sizeof(DrawCommandPacket) << ", got " << header.size << ".\n";
+				DEV_LOG_ERROR("Client: Received DRAW_COMMAND with incorrect size. Expected " +
+				              std::to_string(sizeof(DrawCommandPacket)) + ", got " + std::to_string(header.size));
 				break;
 			}
 
@@ -256,8 +256,8 @@ void SharedMemoryClient::ProcessPacket(const PacketHeader &header, const std::by
 		{
 			if (header.size != sizeof(WorldUpdatePacket))
 			{
-				std::cerr << "Client: Received WORLD_UPDATE with incorrect size. Expected "
-						<< sizeof(WorldUpdatePacket) << ", got " << header.size << ".\n";
+				DEV_LOG_ERROR("Client: Received WORLD_UPDATE with incorrect size. Expected " +
+				              std::to_string(sizeof(WorldUpdatePacket)) + ", got " + std::to_string(header.size));
 				break;
 			}
 
@@ -290,7 +290,7 @@ void SharedMemoryClient::ProcessPacket(const PacketHeader &header, const std::by
 		}
 		default:  // NOLINT(clang-diagnostic-covered-switch-default)
 		{
-			std::cerr << "Client: Unknown packet type " << static_cast<std::uint8_t>(header.type) << '\n';
+			DEV_LOG_WARNING("Client: Unknown packet type " + std::to_string(static_cast<std::uint8_t>(header.type)));
 			break;
 		}
 	}
@@ -308,7 +308,7 @@ void SharedMemoryClient::ClearDrawCommands()
 
 	if (!m_drawCommands.empty())
 	{
-		std::cout << "Client: Clearing " << m_drawCommands.size() << " draw commands.\n";
+		DEV_LOG_INFO("Client: Clearing " + std::to_string(m_drawCommands.size()) + " draw commands");
 	}
 
 	m_drawCommands.clear();

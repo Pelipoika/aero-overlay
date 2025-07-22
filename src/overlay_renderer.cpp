@@ -1,8 +1,13 @@
 #include "overlay_renderer.h"
-#include <iostream>
-#include "config.h"
 
-OverlayRenderer::OverlayRenderer() : m_initialized(false) { }
+#include "config.h"
+#include "developer_console.h"
+
+// Static font members
+Font OverlayRenderer::s_consolasFont = {};
+bool OverlayRenderer::s_fontLoaded   = false;
+
+OverlayRenderer::OverlayRenderer() : m_initialized(false), m_console(nullptr) { }
 
 OverlayRenderer::~OverlayRenderer()
 {
@@ -24,7 +29,7 @@ bool OverlayRenderer::Initialize(const int width, const int height, const int x,
 
 	if (!IsWindowReady())
 	{
-		std::cerr << "Failed to initialize raylib window" << '\n';
+		DEV_LOG_ERROR("Failed to initialize raylib window");
 		return false;
 	}
 
@@ -32,7 +37,21 @@ bool OverlayRenderer::Initialize(const int width, const int height, const int x,
 	SetWindowPosition(x, y);
 	SetTargetFPS(Config::TARGET_FPS);
 
+	// Load custom font
+	if (!LoadCustomFont())
+	{
+		DEV_LOG_WARNING("Failed to load Consolas font, using default font");
+	}
+
+	// Initialize developer console
+	m_console = &DeveloperConsole::GetInstance();
+	m_console->SetMaxMessages(Config::CONSOLE_MAX_MESSAGES);
+	m_console->SetMessageLifetime(Config::CONSOLE_MESSAGE_LIFETIME);
+	m_console->SetFadeOutTime(Config::CONSOLE_FADE_TIME);
+
 	m_initialized = true;
+
+	DEV_LOG_INFO("Overlay renderer initialized successfully");
 	return true;
 }
 
@@ -40,24 +59,102 @@ void OverlayRenderer::Shutdown()
 {
 	if (m_initialized)
 	{
+		DEV_LOG_INFO("Shutting down overlay renderer");
+		UnloadCustomFont();
 		CloseWindow();
 		m_initialized = false;
+		m_console     = nullptr;
 	}
 }
 
-void OverlayRenderer::BeginFrame() const
+bool OverlayRenderer::LoadCustomFont()
+{
+	// Try to load Consolas font from system
+	const char *fontPaths[] = {
+		"C:/Windows/Fonts/consola.ttf",  // Windows system font path
+		"./fonts/consola.ttf",           // Local font path
+		"./consola.ttf"                  // Fallback local path
+	};
+
+	for (const char *path : fontPaths)
+	{
+		if (FileExists(path))
+		{
+			s_consolasFont = LoadFontEx(path, Config::CONSOLE_FONT_SIZE, nullptr, 0);
+			if (s_consolasFont.texture.id > 0)
+			{
+				s_fontLoaded = true;
+				DEV_LOG_INFO("Loaded Consolas font from: " + std::string(path));
+				return true;
+			}
+			else
+			{
+				DEV_LOG_WARNING("Found font file but failed to load: " + std::string(path));
+			}
+		}
+	}
+
+	// Try loading from the default font with a monospace preference
+	int fontChars = 95; // Standard ASCII printable characters
+
+	// Generate default character set
+	int *codepoints = LoadCodepoints(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", &fontChars);
+
+	if (codepoints != nullptr)
+	{
+		s_consolasFont = LoadFontEx("", Config::CONSOLE_FONT_SIZE, codepoints, fontChars);
+		UnloadCodepoints(codepoints);
+
+		if (s_consolasFont.texture.id > 0)
+		{
+			s_fontLoaded = true;
+			DEV_LOG_WARNING("Using default font as Consolas fallback");
+			return true;
+		}
+	}
+
+	// Final fallback - use default font
+	s_consolasFont = GetFontDefault();
+	s_fontLoaded   = false;
+	DEV_LOG_ERROR("Failed to load any custom font, using system default");
+	return false;
+}
+
+void OverlayRenderer::UnloadCustomFont()
+{
+	if (s_fontLoaded)
+	{
+		UnloadFont(s_consolasFont);
+		s_fontLoaded = false;
+		DEV_LOG_INFO("Unloaded custom font");
+	}
+}
+
+void OverlayRenderer::BeginFrame()
 {
 	if (!m_initialized)
 		return;
+
+	// Update console with delta time
+	if (m_console)
+	{
+		m_console->Update(GetFrameTime());
+	}
 
 	BeginDrawing();
 	ClearBackground(BLANK);
 }
 
-void OverlayRenderer::EndFrame() const
+void OverlayRenderer::EndFrame()
 {
 	if (!m_initialized)
 		return;
+
+	// Render developer console last so it appears on top
+	if (m_console)
+	{
+		m_console->Render();
+	}
 
 	//RenderDebugInfo();
 	EndDrawing();
@@ -117,19 +214,11 @@ void OverlayRenderer::Render3DCommands(const std::vector<DrawCommandPacket> &com
 			}
 			default:  // NOLINT(clang-diagnostic-covered-switch-default)
 			{
-				std::cout << "Uknown cmd type : " << static_cast<int>(cmd.type) << '\n';
+				DEV_LOG_WARNING("Unknown draw command type: " + std::to_string(static_cast<int>(cmd.type)));
 				break;
 			}
 		}
 	}
-
-	// Draw some debug geometry
-	//DrawCapsuleWires({-1114, -245, -1215},
-	//             Config::DEBUG_CYLINDER_RADIUS,
-	//             Config::DEBUG_CYLINDER_RADIUS,
-	//             Config::DEBUG_CYLINDER_HEIGHT,
-	//             Config::DEBUG_CYLINDER_SLICES,
-	//             GREEN);
 
 	rlFPCameraEndMode3D();
 }
@@ -140,15 +229,37 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 	{
 		if (cmd.type == DrawCommandType::TEXT)
 		{
-			const int text_width = (MeasureText(cmd.text.text, Config::DEBUG_TEXT_SIZE) / 2);
+			// Use custom font if available, otherwise use default
+			int textWidth;
+			if (s_fontLoaded)
+			{
+				Vector2 textSize = MeasureTextEx(s_consolasFont, cmd.text.text, static_cast<float>(Config::DEBUG_TEXT_SIZE), 1.0f);
+				textWidth        = static_cast<int>(textSize.x / 2);
+			}
+			else
+			{
+				textWidth = MeasureText(cmd.text.text, Config::DEBUG_TEXT_SIZE) / 2;
+			}
 
 			if (cmd.text.onscreen)
 			{
-				DrawText(cmd.text.text,
-				         static_cast<int>(cmd.text.position.x) - text_width,
-				         static_cast<int>(cmd.text.position.y),
-				         Config::DEBUG_TEXT_SIZE,
-				         cmd.color);
+				if (s_fontLoaded)
+				{
+					DrawTextEx(s_consolasFont, cmd.text.text,
+					           {
+						           static_cast<float>(static_cast<int>(cmd.text.position.x) - textWidth),
+						           static_cast<float>(static_cast<int>(cmd.text.position.y))
+					           },
+					           static_cast<float>(Config::DEBUG_TEXT_SIZE), 1.0f, cmd.color);
+				}
+				else
+				{
+					DrawText(cmd.text.text,
+					         static_cast<int>(cmd.text.position.x) - textWidth,
+					         static_cast<int>(cmd.text.position.y),
+					         Config::DEBUG_TEXT_SIZE,
+					         cmd.color);
+				}
 			}
 			else
 			{
@@ -164,11 +275,20 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 				if (!onScreen || !inFront)
 					continue;
 
-				DrawText(cmd.text.text,
-				         static_cast<int>(screenPos.x) - text_width,
-				         static_cast<int>(screenPos.y),
-				         Config::DEBUG_TEXT_SIZE,
-				         cmd.color);
+				if (s_fontLoaded)
+				{
+					DrawTextEx(s_consolasFont, cmd.text.text,
+					           {screenPos.x - static_cast<float>(textWidth), screenPos.y},
+					           static_cast<float>(Config::DEBUG_TEXT_SIZE), 1.0f, cmd.color);
+				}
+				else
+				{
+					DrawText(cmd.text.text,
+					         static_cast<int>(screenPos.x) - textWidth,
+					         static_cast<int>(screenPos.y),
+					         Config::DEBUG_TEXT_SIZE,
+					         cmd.color);
+				}
 			}
 		}
 	}
@@ -176,7 +296,15 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 
 void OverlayRenderer::RenderDebugInfo()
 {
-	DrawText("Debug Overlay Active", 190, 200, Config::DEBUG_TEXT_SIZE, LIGHTGRAY);
+	if (s_fontLoaded)
+	{
+		DrawTextEx(s_consolasFont, "Debug Overlay Active", {190, 200}, static_cast<float>(Config::DEBUG_TEXT_SIZE), 1.0f, LIGHTGRAY);
+	}
+	else
+	{
+		DrawText("Debug Overlay Active", 190, 200, Config::DEBUG_TEXT_SIZE, LIGHTGRAY);
+	}
+
 	DrawFPS(100, 100);
 }
 

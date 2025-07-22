@@ -1,7 +1,7 @@
-#include <iostream>
 #include "overlay_application.h"
+#include "developer_console.h"
 
-int main()
+BOOL WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 	try
 	{
@@ -10,12 +10,12 @@ int main()
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << "Fatal error: " << e.what() << '\n';
+		DEV_LOG_ERROR("Fatal error: " + std::string(e.what()));
 		return -1;
 	}
 	catch (...)
 	{
-		std::cerr << "Unknown fatal error occurred" << '\n';
+		DEV_LOG_ERROR("Unknown fatal error occurred");
 		return -1;
 	}
 }

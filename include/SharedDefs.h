@@ -62,7 +62,7 @@ struct TriangleCommandData
 
 struct SphereCommandData
 {
-	SphereCommandData(const Vector &center, float radius) : center(center), radius(radius) { }
+	SphereCommandData(const Vector &center, const float radius) : center(center), radius(radius) { }
 
 	Vector center;
 	float  radius;
@@ -70,7 +70,7 @@ struct SphereCommandData
 
 struct CircleCommandData
 {
-	CircleCommandData(const Vector &center, const Vector &xAxis, const Vector &yAxis, float radius) : center(center), xAxis(xAxis), yAxis(yAxis), radius(radius) { }
+	CircleCommandData(const Vector &center, const Vector &xAxis, const Vector &yAxis, const float radius) : center(center), xAxis(xAxis), yAxis(yAxis), radius(radius) { }
 
 	Vector center;
 	Vector xAxis;
@@ -125,7 +125,7 @@ struct DrawCommandPacket
 
 struct WorldUpdatePacket
 {
-	WorldUpdatePacket(const QAngle &view_angles, const Vector &origin, float curtime) : viewAngles(view_angles), origin(origin), curtime(curtime) { }
+	WorldUpdatePacket(const QAngle &view_angles, const Vector &origin, const float curtime) : viewAngles(view_angles), origin(origin), curtime(curtime) { }
 
 	QAngle viewAngles;
 	Vector origin;

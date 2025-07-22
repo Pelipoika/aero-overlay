@@ -1,5 +1,6 @@
 #include "overlay_application.h"
 #include "config.h"
+#include "developer_console.h"
 #include <cstdio>
 #include <print>
 
@@ -14,7 +15,7 @@ int OverlayApplication::Run()
 {
 	while (!Initialize())
 	{
-		std::println(stderr, "Failed to initialize overlay application, retrying in 2 seconds.");
+		DEV_LOG_ERROR("Failed to initialize overlay application, retrying in 2 seconds.");
 		std::this_thread::sleep_for(std::chrono::seconds(2));
 	}
 
@@ -25,10 +26,13 @@ int OverlayApplication::Run()
 
 bool OverlayApplication::Initialize()
 {
+	DEV_LOG_INFO("Initializing debug overlay...");
+
 	// Initialize window manager and find target window
 	m_windowManager = std::make_unique<WindowManager>();
 	if (!m_windowManager->FindTargetWindow(Config::TARGET_WINDOW_TITLE))
 	{
+		DEV_LOG_ERROR("Target window not found - waiting for " + std::string(Config::TARGET_WINDOW_TITLE));
 		return false;
 	}
 
@@ -36,8 +40,12 @@ bool OverlayApplication::Initialize()
 	int x, y, width, height;
 	if (!m_windowManager->GetWindowBounds(x, y, width, height))
 	{
+		DEV_LOG_ERROR("Failed to get target window bounds");
 		return false;
 	}
+
+	DEV_LOG_INFO("Target window found: " + std::to_string(width) + "x" + std::to_string(height) +
+	             " at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
 
 	// Initialize camera
 	rlFPCameraInit(&m_camera, Config::DEFAULT_FOV, {0, 0, 0});
@@ -48,6 +56,7 @@ bool OverlayApplication::Initialize()
 
 	if (!m_memoryClient->Start(m_running, m_camera))
 	{
+		DEV_LOG_ERROR("Failed to start shared memory client");
 		return false;
 	}
 
@@ -58,7 +67,21 @@ bool OverlayApplication::Initialize()
 		return false;
 	}
 
-	std::println("Overlay application initialized successfully");
+	DEV_LOG_INFO("Debug overlay initialized successfully");
+
+	// Show font status
+	if (OverlayRenderer::IsFontLoaded())
+	{
+		DEV_LOG_INFO("Custom font (Consolas) loaded successfully");
+	}
+	else
+	{
+		DEV_LOG_WARNING("Using default font - Consolas not available");
+	}
+
+	DEV_LOG_WARNING("Developer console active - messages will fade after " +
+	                std::to_string(Config::CONSOLE_MESSAGE_LIFETIME) + " seconds");
+
 	return true;
 }
 
@@ -79,6 +102,7 @@ void OverlayApplication::Shutdown()
 	}
 
 	m_windowManager.reset();
+	DEV_LOG_INFO("Debug overlay shutdown complete");
 }
 
 void OverlayApplication::MainLoop()
