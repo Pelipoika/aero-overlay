@@ -198,7 +198,7 @@ void OverlayRenderer::Render3DCommands(const std::vector<DrawCommandPacket> &com
 			case DrawCommandType::CIRCLE:
 			{
 				auto [center, xAxis, yAxis, radius] = cmd.circle;
-				DrawCircle3D(center.ToRayLib(), radius, xAxis.ToRayLib(), yAxis.ToRayLib().y, cmd.color);
+				DrawCircle3D(center.ToRayLib(), radius, Vector3{xAxis.x, xAxis.y, xAxis.z}, 90.f, cmd.color);
 				break;
 			}
 			case DrawCommandType::BBOX:

@@ -65,6 +65,18 @@ void rlFPCameraInit(rlFPCamera *camera, const float fovY, const Vector3 position
 	rlFPCameraResizeView(camera);
 }
 
+void rlFPCameraSetFOV(rlFPCamera *camera, const int fov)
+{
+	camera->FOV.y = static_cast<float>(fov);
+
+	if (camera->ViewCamera.projection == CAMERA_PERSPECTIVE)
+	{
+		camera->ViewCamera.fovy = static_cast<float>(fov);
+	}
+
+	rlFPCameraResizeView(camera);
+}
+
 void rlFPCameraResizeView(rlFPCamera *camera)
 {
 	if (camera == nullptr)

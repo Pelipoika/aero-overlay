@@ -125,8 +125,12 @@ struct DrawCommandPacket
 
 struct WorldUpdatePacket
 {
-	WorldUpdatePacket(const QAngle &view_angles, const Vector &origin, const float curtime) : viewAngles(view_angles), origin(origin), curtime(curtime) { }
+	WorldUpdatePacket(const int fov, const QAngle &view_angles, const Vector &origin, const float curtime) : fov(fov),
+	                                                                                                         viewAngles(view_angles),
+	                                                                                                         origin(origin),
+	                                                                                                         curtime(curtime) { }
 
+	int    fov;
 	QAngle viewAngles;
 	Vector origin;
 	float  curtime;

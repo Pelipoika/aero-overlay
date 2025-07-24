@@ -343,6 +343,8 @@ void SharedMemoryClient::ProcessPacket(const PacketHeader &header, const std::by
 			ExpireOldCommands();
 
 			rlFPCameraSetPosition(&camera, worldUpdate.origin.ToRayLib());
+			rlFPCameraSetFOV(&camera, worldUpdate.fov);
+
 			camera.ViewAngles = {
 				.x = -worldUpdate.viewAngles.y * DEG2RAD,
 				.y = worldUpdate.viewAngles.x * DEG2RAD,
