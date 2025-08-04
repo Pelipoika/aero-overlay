@@ -243,20 +243,23 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 
 			if (cmd.text.onscreen)
 			{
+				const Vector2 textPos = {
+					static_cast<float>(static_cast<int>(cmd.text.position.x * static_cast<float>(GetScreenWidth())) - textWidth),
+					static_cast<float>(static_cast<int>(cmd.text.position.y * static_cast<float>(GetScreenHeight())))
+				};
+
 				if (s_fontLoaded)
 				{
-					DrawTextEx(s_consolasFont, cmd.text.text,
-					           {
-						           static_cast<float>(static_cast<int>(cmd.text.position.x) - textWidth),
-						           static_cast<float>(static_cast<int>(cmd.text.position.y))
-					           },
+					DrawTextEx(s_consolasFont,
+					           cmd.text.text,
+					           textPos,
 					           static_cast<float>(Config::DEBUG_TEXT_SIZE), 1.0f, cmd.color);
 				}
 				else
 				{
 					DrawText(cmd.text.text,
-					         static_cast<int>(cmd.text.position.x) - textWidth,
-					         static_cast<int>(cmd.text.position.y),
+					         static_cast<int>(textPos.x),
+					         static_cast<int>(textPos.y),
 					         Config::DEBUG_TEXT_SIZE,
 					         cmd.color);
 				}
