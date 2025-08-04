@@ -81,5 +81,7 @@ typedef struct tagBITMAPINFOHEADER
 // Windows.h function declarations to avoid raylib conflicts
 extern "C" HWND WINAPI FindWindowA(LPCSTR lpClassName, LPCSTR lpWindowName);
 extern "C" BOOL WINAPI GetWindowRect(HWND hWnd, LPRECT lpRect);
+extern "C" BOOL WINAPI GetClientRect(HWND hWnd, LPRECT lpRect);
+extern "C" BOOL WINAPI ClientToScreen(HWND hWnd, LPPOINT lpPoint);
 
 #endif // _WIN32

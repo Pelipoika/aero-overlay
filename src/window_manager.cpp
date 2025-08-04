@@ -22,17 +22,24 @@ bool WindowManager::GetWindowBounds(int &x, int &y, int &width, int &height) con
 	if (!IsWindowValid())
 		return false;
 
-	RECT rect;
-	if (!GetWindowRect(m_targetWindow, &rect))
+	RECT clientRect;
+	if (!GetClientRect(m_targetWindow, &clientRect))
 	{
-		DEV_LOG_ERROR("Failed to get window rectangle");
+		DEV_LOG_ERROR("Failed to get client rectangle");
 		return false;
 	}
 
-	x      = rect.left;
-	y      = rect.top;
-	width  = rect.right - rect.left;
-	height = rect.bottom - rect.top;
+	POINT topLeft = {0, 0};
+	if (!ClientToScreen(m_targetWindow, &topLeft))
+	{
+		DEV_LOG_ERROR("Failed to convert client coordinates to screen coordinates");
+		return false;
+	}
+
+	x      = topLeft.x;
+	y      = topLeft.y;
+	width  = clientRect.right - clientRect.left;
+	height = clientRect.bottom - clientRect.top;
 
 	return true;
 }

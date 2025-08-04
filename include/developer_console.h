@@ -68,8 +68,8 @@ private:
 	float  m_fadeOutTime     = 1.0f;      // How long the fade out animation takes
 
 	int m_lineSpacing = 18;
-	int m_marginX     = 20;
-	int m_marginY     = 20;
+	int m_marginX     = 8;
+	int m_marginY     = 8;
 
 	// Helper functions
 	Color GetColorForLevel(LogLevel level, float alpha) const;
