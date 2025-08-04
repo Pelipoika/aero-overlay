@@ -43,6 +43,11 @@ bool OverlayRenderer::Initialize(const int width, const int height, const int x,
 		DEV_LOG_WARNING("Failed to load Consolas font, using default font");
 	}
 
+	if (IsFontLoaded())
+	{
+		SetTextureFilter(GetConsolasFont().texture, TEXTURE_FILTER_POINT);
+	}
+
 	// Initialize developer console
 	m_console = &DeveloperConsole::GetInstance();
 	m_console->SetMaxMessages(Config::CONSOLE_MAX_MESSAGES);
@@ -85,12 +90,11 @@ bool OverlayRenderer::LoadCustomFont()
 			{
 				s_fontLoaded = true;
 				DEV_LOG_INFO("Loaded Consolas font from: " + std::string(path));
+
 				return true;
 			}
-			else
-			{
-				DEV_LOG_WARNING("Found font file but failed to load: " + std::string(path));
-			}
+
+			DEV_LOG_WARNING("Found font file but failed to load: " + std::string(path));
 		}
 	}
 
@@ -227,72 +231,67 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 {
 	for (const auto &cmd : commands)
 	{
-		if (cmd.type == DrawCommandType::TEXT)
+		if (cmd.type != DrawCommandType::TEXT)
 		{
-			// Use custom font if available, otherwise use default
-			int textWidth;
-			if (s_fontLoaded)
+			continue;
+		}
+
+		constexpr float fontSize = static_cast<float>(Config::DEBUG_TEXT_SIZE);
+
+		Vector2 screenPos{};
+		bool    shouldDraw = false;
+
+		if (cmd.text.onscreen)
+		{
+			screenPos = {
+				cmd.text.position.x * static_cast<float>(GetScreenWidth()),
+				cmd.text.position.y * static_cast<float>(GetScreenHeight())
+			};
+			shouldDraw = true;
+		}
+		else
+		{
+			const Vector2 projectedPos = GetWorldToScreen(cmd.text.position.ToRayLib(), camera.ViewCamera);
+
+			const bool onScreen = (projectedPos.x >= 0) && (projectedPos.x < static_cast<float>(GetScreenWidth())) &&
+			                      (projectedPos.y >= 0) && (projectedPos.y < static_cast<float>(GetScreenHeight()));
+
+			const Vector3 camForward = Vector3Subtract(camera.ViewCamera.target, camera.ViewCamera.position);
+			const Vector3 toPoint    = Vector3Subtract(cmd.text.position.ToRayLib(), camera.ViewCamera.position);
+			const bool    inFront    = Vector3DotProduct(camForward, toPoint) > 0;
+
+			if (onScreen && inFront)
 			{
-				Vector2 textSize = MeasureTextEx(s_consolasFont, cmd.text.text, static_cast<float>(Config::DEBUG_TEXT_SIZE), 1.0f);
-				textWidth        = static_cast<int>(textSize.x / 2);
+				screenPos  = projectedPos;
+				shouldDraw = true;
 			}
-			else
-			{
-				textWidth = MeasureText(cmd.text.text, Config::DEBUG_TEXT_SIZE) / 2;
-			}
+		}
 
-			if (cmd.text.onscreen)
-			{
-				const Vector2 textPos = {
-					static_cast<float>(static_cast<int>(cmd.text.position.x * static_cast<float>(GetScreenWidth())) - textWidth),
-					static_cast<float>(static_cast<int>(cmd.text.position.y * static_cast<float>(GetScreenHeight())))
-				};
+		if (!shouldDraw)
+		{
+			continue;
+		}
 
-				if (s_fontLoaded)
-				{
-					DrawTextEx(s_consolasFont,
-					           cmd.text.text,
-					           textPos,
-					           static_cast<float>(Config::DEBUG_TEXT_SIZE), 1.0f, cmd.color);
-				}
-				else
-				{
-					DrawText(cmd.text.text,
-					         static_cast<int>(textPos.x),
-					         static_cast<int>(textPos.y),
-					         Config::DEBUG_TEXT_SIZE,
-					         cmd.color);
-				}
-			}
-			else
-			{
-				const Vector2 screenPos = GetWorldToScreen(cmd.text.position.ToRayLib(), camera.ViewCamera);
+		int textWidth;
+		if (s_fontLoaded)
+		{
+			const Vector2 textSize = MeasureTextEx(s_consolasFont, cmd.text.text, fontSize, 1.0f);
+			textWidth              = static_cast<int>(textSize.x / 2);
+		}
+		else
+		{
+			textWidth = MeasureText(cmd.text.text, static_cast<int>(fontSize)) / 2;
+		}
 
-				const bool onScreen = (screenPos.x >= 0) && (screenPos.x < static_cast<float>(GetScreenWidth())) &&
-				                      (screenPos.y >= 0) && (screenPos.y < static_cast<float>(GetScreenHeight()));
+		const Vector2 drawPos = {screenPos.x - static_cast<float>(textWidth), screenPos.y};
 
-				const Vector3 camForward = Vector3Subtract(camera.ViewCamera.target, camera.ViewCamera.position);
-				const Vector3 toPoint    = Vector3Subtract(cmd.text.position.ToRayLib(), camera.ViewCamera.position);
-				const bool    inFront    = Vector3DotProduct(camForward, toPoint) > 0;
-
-				if (!onScreen || !inFront)
-					continue;
-
-				if (s_fontLoaded)
-				{
-					DrawTextEx(s_consolasFont, cmd.text.text,
-					           {screenPos.x - static_cast<float>(textWidth), screenPos.y},
-					           static_cast<float>(Config::DEBUG_TEXT_SIZE), 1.0f, cmd.color);
-				}
-				else
-				{
-					DrawText(cmd.text.text,
-					         static_cast<int>(screenPos.x) - textWidth,
-					         static_cast<int>(screenPos.y),
-					         Config::DEBUG_TEXT_SIZE,
-					         cmd.color);
-				}
-			}
+		if (s_fontLoaded)
+		{
+			DrawTextEx(s_consolasFont, cmd.text.text, drawPos, fontSize, 1.0f, cmd.color);
+		}
+		else
+		{
+			DrawText(cmd.text.text, static_cast<int>(drawPos.x), static_cast<int>(drawPos.y), static_cast<int>(fontSize), cmd.color);
 		}
 	}
 }

@@ -3,6 +3,8 @@
 
 #include <algorithm>
 
+#include "config.h"
+
 DeveloperConsole::DeveloperConsole()
 {
 	// Reserve space for messages to avoid frequent reallocations
@@ -84,34 +86,34 @@ void DeveloperConsole::Render()
 		int textWidth;
 		if (OverlayRenderer::IsFontLoaded())
 		{
-			Vector2 textSize = MeasureTextEx(OverlayRenderer::GetConsolasFont(), message.text.c_str(), static_cast<float>(m_fontSize), 1.0f);
+			Vector2 textSize = MeasureTextEx(OverlayRenderer::GetConsolasFont(), message.text.c_str(), static_cast<float>(Config::CONSOLE_FONT_SIZE), 1.0f);
 			textWidth        = static_cast<int>(textSize.x);
 		}
 		else
 		{
-			textWidth = MeasureText(message.text.c_str(), m_fontSize);
+			textWidth = MeasureText(message.text.c_str(), Config::CONSOLE_FONT_SIZE);
 		}
 
 		// Draw semi-transparent dark background with subtle border
 		const Color bgColor = {0, 0, 0, static_cast<unsigned char>(255 * message.alpha)};
 
 		// Background rectangle
-		DrawRectangle(m_marginX - 4, yOffset - 2, textWidth + 8, m_fontSize + 4, bgColor);
+		DrawRectangle(m_marginX - 4, yOffset - 2, textWidth + 8, Config::CONSOLE_FONT_SIZE + 4, bgColor);
 
 		// Subtle left border (Source Engine style accent)
 		const Color accentColor = GetAccentColorForLevel(message.level, message.alpha);
-		DrawRectangle(m_marginX - 4, yOffset - 2, 2, m_fontSize + 4, accentColor);
+		DrawRectangle(m_marginX - 4, yOffset - 2, 2, Config::CONSOLE_FONT_SIZE + 4, accentColor);
 
 		// Draw the text using custom font if available
 		if (OverlayRenderer::IsFontLoaded())
 		{
 			DrawTextEx(OverlayRenderer::GetConsolasFont(), message.text.c_str(),
 			           {static_cast<float>(m_marginX), static_cast<float>(yOffset)},
-			           static_cast<float>(m_fontSize), 1.0f, color);
+			           static_cast<float>(Config::CONSOLE_FONT_SIZE), 1.0f, color);
 		}
 		else
 		{
-			DrawText(message.text.c_str(), m_marginX, yOffset, m_fontSize, color);
+			DrawText(message.text.c_str(), m_marginX, yOffset, Config::CONSOLE_FONT_SIZE, color);
 		}
 
 		yOffset += m_lineSpacing;

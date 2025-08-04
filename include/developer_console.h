@@ -67,11 +67,9 @@ private:
 	float  m_messageLifetime = 5.0f;  // How long messages stay at full opacity
 	float  m_fadeOutTime     = 1.0f;      // How long the fade out animation takes
 
-	// Rendering settings
-	int m_fontSize    = 14;
 	int m_lineSpacing = 18;
-	int m_marginX     = 40;
-	int m_marginY     = 40;
+	int m_marginX     = 20;
+	int m_marginY     = 20;
 
 	// Helper functions
 	Color GetColorForLevel(LogLevel level, float alpha) const;
