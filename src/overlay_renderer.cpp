@@ -244,9 +244,10 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 		if (cmd.text.onscreen)
 		{
 			screenPos = {
-				cmd.text.position.x * static_cast<float>(GetScreenWidth()),
-				cmd.text.position.y * static_cast<float>(GetScreenHeight())
+				.x = cmd.text.position.x * static_cast<float>(GetScreenWidth()),
+				.y = cmd.text.position.y * static_cast<float>(GetScreenHeight())
 			};
+
 			shouldDraw = true;
 		}
 		else
@@ -329,20 +330,6 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 			DrawText(cmd.text.text, static_cast<int>(drawPos.x), static_cast<int>(drawPos.y), static_cast<int>(fontSize), cmd.color);
 		}
 	}
-}
-
-void OverlayRenderer::RenderDebugInfo()
-{
-	if (s_fontLoaded)
-	{
-		DrawTextEx(s_consolasFont, "Debug Overlay Active", {190, 200}, static_cast<float>(Config::DEBUG_TEXT_SIZE), 1.0f, LIGHTGRAY);
-	}
-	else
-	{
-		DrawText("Debug Overlay Active", 190, 200, Config::DEBUG_TEXT_SIZE, LIGHTGRAY);
-	}
-
-	DrawFPS(100, 100);
 }
 
 bool OverlayRenderer::ShouldClose()

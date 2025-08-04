@@ -1,8 +1,6 @@
 #include "developer_console.h"
 #include "overlay_renderer.h"
 
-#include <algorithm>
-
 #include "config.h"
 
 DeveloperConsole::DeveloperConsole()
@@ -86,8 +84,8 @@ void DeveloperConsole::Render()
 		int textWidth;
 		if (OverlayRenderer::IsFontLoaded())
 		{
-			Vector2 textSize = MeasureTextEx(OverlayRenderer::GetConsolasFont(), message.text.c_str(), static_cast<float>(Config::CONSOLE_FONT_SIZE), 1.0f);
-			textWidth        = static_cast<int>(textSize.x);
+			const Vector2 textSize = MeasureTextEx(OverlayRenderer::GetConsolasFont(), message.text.c_str(), static_cast<float>(Config::CONSOLE_FONT_SIZE), 1.0f);
+			textWidth              = static_cast<int>(textSize.x);
 		}
 		else
 		{
@@ -138,7 +136,7 @@ Color DeveloperConsole::GetColorForLevel(const LogLevel level, const float alpha
 			return Color{255, 200, 50, alphaValue};  // Orange-yellow
 		case LogLevel::ERROR:
 			return Color{255, 80, 80, alphaValue};   // Light red
-		default:
+		default:  // NOLINT(clang-diagnostic-covered-switch-default)
 			return Color{220, 220, 220, alphaValue}; // Default to light gray
 	}
 }
@@ -155,7 +153,7 @@ Color DeveloperConsole::GetAccentColorForLevel(const LogLevel level, const float
 			return Color{255, 150, 0, alphaValue};   // Orange accent
 		case LogLevel::ERROR:
 			return Color{255, 50, 50, alphaValue};   // Red accent
-		default:
+		default:  // NOLINT(clang-diagnostic-covered-switch-default)
 			return Color{100, 150, 255, alphaValue}; // Default blue
 	}
 }

@@ -96,7 +96,7 @@ using rlFPCamera = struct
 RLAPI void rlFPCameraInit(rlFPCamera *camera, float fovY, Vector3 position);
 
 // called to set the field of view in Y
-RLAPI void rlFPCameraSetFOV(rlFPCamera* camera, int fov);
+RLAPI void rlFPCameraSetFOV(rlFPCamera *camera, int fov);
 
 // called to update field of view in X when window resizes
 RLAPI void rlFPCameraResizeView(rlFPCamera *camera);

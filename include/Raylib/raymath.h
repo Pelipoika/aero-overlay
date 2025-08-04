@@ -189,7 +189,7 @@ RMAPI float Clamp(const float value, const float min, const float max)
 // Calculate linear interpolation between two floats
 RMAPI float Lerp(const float start, const float end, const float amount)
 {
-	float result = start + amount * (end - start);
+	const float result = start + amount * (end - start);
 
 	return result;
 }
@@ -197,7 +197,7 @@ RMAPI float Lerp(const float start, const float end, const float amount)
 // Normalize input value within input range
 RMAPI float Normalize(const float value, const float start, const float end)
 {
-	float result = (value - start) / (end - start);
+	const float result = (value - start) / (end - start);
 
 	return result;
 }
@@ -205,7 +205,7 @@ RMAPI float Normalize(const float value, const float start, const float end)
 // Remap input value within input range to output range
 RMAPI float Remap(const float value, const float inputStart, const float inputEnd, const float outputStart, const float outputEnd)
 {
-	float result = (value - inputStart) / (inputEnd - inputStart) * (outputEnd - outputStart) + outputStart;
+	const float result = (value - inputStart) / (inputEnd - inputStart) * (outputEnd - outputStart) + outputStart;
 
 	return result;
 }
@@ -213,7 +213,7 @@ RMAPI float Remap(const float value, const float inputStart, const float inputEn
 // Wrap input value from min to max
 RMAPI float Wrap(const float value, const float min, const float max)
 {
-	float result = value - (max - min) * floorf((value - min) / (max - min));
+	const float result = value - (max - min) * floorf((value - min) / (max - min));
 
 	return result;
 }
@@ -225,7 +225,7 @@ RMAPI int FloatEquals(const float x, const float y)
     #define EPSILON 0.000001f
 #endif
 
-	int result = (fabsf(x - y)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(x), fabsf(y))));
+	const int result = (fabsf(x - y)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(x), fabsf(y))));
 
 	return result;
 }
@@ -237,7 +237,7 @@ RMAPI int FloatEquals(const float x, const float y)
 // Vector with components value 0.0f
 RMAPI Vector2 Vector2Zero(void)
 {
-	Vector2 result = {0.0f, 0.0f};
+	const Vector2 result = {0.0f, 0.0f};
 
 	return result;
 }
@@ -245,7 +245,7 @@ RMAPI Vector2 Vector2Zero(void)
 // Vector with components value 1.0f
 RMAPI Vector2 Vector2One(void)
 {
-	Vector2 result = {1.0f, 1.0f};
+	const Vector2 result = {1.0f, 1.0f};
 
 	return result;
 }
@@ -253,7 +253,7 @@ RMAPI Vector2 Vector2One(void)
 // Add two vectors (v1 + v2)
 RMAPI Vector2 Vector2Add(const Vector2 v1, const Vector2 v2)
 {
-	Vector2 result = {v1.x + v2.x, v1.y + v2.y};
+	const Vector2 result = {v1.x + v2.x, v1.y + v2.y};
 
 	return result;
 }
@@ -261,7 +261,7 @@ RMAPI Vector2 Vector2Add(const Vector2 v1, const Vector2 v2)
 // Add vector and float value
 RMAPI Vector2 Vector2AddValue(const Vector2 v, const float add)
 {
-	Vector2 result = {v.x + add, v.y + add};
+	const Vector2 result = {v.x + add, v.y + add};
 
 	return result;
 }
@@ -269,7 +269,7 @@ RMAPI Vector2 Vector2AddValue(const Vector2 v, const float add)
 // Subtract two vectors (v1 - v2)
 RMAPI Vector2 Vector2Subtract(const Vector2 v1, const Vector2 v2)
 {
-	Vector2 result = {v1.x - v2.x, v1.y - v2.y};
+	const Vector2 result = {v1.x - v2.x, v1.y - v2.y};
 
 	return result;
 }
@@ -277,7 +277,7 @@ RMAPI Vector2 Vector2Subtract(const Vector2 v1, const Vector2 v2)
 // Subtract vector by float value
 RMAPI Vector2 Vector2SubtractValue(const Vector2 v, const float sub)
 {
-	Vector2 result = {v.x - sub, v.y - sub};
+	const Vector2 result = {v.x - sub, v.y - sub};
 
 	return result;
 }
@@ -285,7 +285,7 @@ RMAPI Vector2 Vector2SubtractValue(const Vector2 v, const float sub)
 // Calculate vector length
 RMAPI float Vector2Length(const Vector2 v)
 {
-	float result = sqrtf((v.x * v.x) + (v.y * v.y));
+	const float result = sqrtf((v.x * v.x) + (v.y * v.y));
 
 	return result;
 }
@@ -293,7 +293,7 @@ RMAPI float Vector2Length(const Vector2 v)
 // Calculate vector square length
 RMAPI float Vector2LengthSqr(const Vector2 v)
 {
-	float result = (v.x * v.x) + (v.y * v.y);
+	const float result = (v.x * v.x) + (v.y * v.y);
 
 	return result;
 }
@@ -301,7 +301,7 @@ RMAPI float Vector2LengthSqr(const Vector2 v)
 // Calculate two vectors dot product
 RMAPI float Vector2DotProduct(const Vector2 v1, const Vector2 v2)
 {
-	float result = (v1.x * v2.x + v1.y * v2.y);
+	const float result = (v1.x * v2.x + v1.y * v2.y);
 
 	return result;
 }
@@ -309,7 +309,7 @@ RMAPI float Vector2DotProduct(const Vector2 v1, const Vector2 v2)
 // Calculate distance between two vectors
 RMAPI float Vector2Distance(const Vector2 v1, const Vector2 v2)
 {
-	float result = sqrtf((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y));
+	const float result = sqrtf((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y));
 
 	return result;
 }
@@ -317,7 +317,7 @@ RMAPI float Vector2Distance(const Vector2 v1, const Vector2 v2)
 // Calculate square distance between two vectors
 RMAPI float Vector2DistanceSqr(const Vector2 v1, const Vector2 v2)
 {
-	float result = ((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y));
+	const float result = ((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y));
 
 	return result;
 }
@@ -328,8 +328,8 @@ RMAPI float Vector2Angle(const Vector2 v1, const Vector2 v2)
 {
 	float result = 0.0f;
 
-	float dot = v1.x * v2.x + v1.y * v2.y;
-	float det = v1.x * v2.y - v1.y * v2.x;
+	const float dot = v1.x * v2.x + v1.y * v2.y;
+	const float det = v1.x * v2.y - v1.y * v2.x;
 
 	result = atan2f(det, dot);
 
@@ -352,7 +352,7 @@ RMAPI float Vector2LineAngle(const Vector2 start, const Vector2 end)
 // Scale vector (multiply by value)
 RMAPI Vector2 Vector2Scale(const Vector2 v, const float scale)
 {
-	Vector2 result = {v.x * scale, v.y * scale};
+	const Vector2 result = {v.x * scale, v.y * scale};
 
 	return result;
 }
@@ -360,7 +360,7 @@ RMAPI Vector2 Vector2Scale(const Vector2 v, const float scale)
 // Multiply vector by vector
 RMAPI Vector2 Vector2Multiply(const Vector2 v1, const Vector2 v2)
 {
-	Vector2 result = {v1.x * v2.x, v1.y * v2.y};
+	const Vector2 result = {v1.x * v2.x, v1.y * v2.y};
 
 	return result;
 }
@@ -368,7 +368,7 @@ RMAPI Vector2 Vector2Multiply(const Vector2 v1, const Vector2 v2)
 // Negate vector
 RMAPI Vector2 Vector2Negate(const Vector2 v)
 {
-	Vector2 result = {-v.x, -v.y};
+	const Vector2 result = {-v.x, -v.y};
 
 	return result;
 }
@@ -376,7 +376,7 @@ RMAPI Vector2 Vector2Negate(const Vector2 v)
 // Divide vector by vector
 RMAPI Vector2 Vector2Divide(const Vector2 v1, const Vector2 v2)
 {
-	Vector2 result = {v1.x / v2.x, v1.y / v2.y};
+	const Vector2 result = {v1.x / v2.x, v1.y / v2.y};
 
 	return result;
 }
@@ -385,11 +385,11 @@ RMAPI Vector2 Vector2Divide(const Vector2 v1, const Vector2 v2)
 RMAPI Vector2 Vector2Normalize(const Vector2 v)
 {
 	Vector2 result = {0};
-	float   length = sqrtf((v.x * v.x) + (v.y * v.y));
+	const float   length = sqrtf((v.x * v.x) + (v.y * v.y));
 
 	if (length > 0)
 	{
-		float ilength = 1.0f / length;
+		const float ilength = 1.0f / length;
 		result.x      = v.x * ilength;
 		result.y      = v.y * ilength;
 	}
@@ -402,9 +402,9 @@ RMAPI Vector2 Vector2Transform(const Vector2 v, Matrix mat)
 {
 	Vector2 result = {0};
 
-	float x = v.x;
-	float y = v.y;
-	float z = 0;
+	const float x = v.x;
+	const float y = v.y;
+	const float z = 0;
 
 	result.x = mat.m0 * x + mat.m4 * y + mat.m8 * z + mat.m12;
 	result.y = mat.m1 * x + mat.m5 * y + mat.m9 * z + mat.m13;
@@ -428,7 +428,7 @@ RMAPI Vector2 Vector2Reflect(const Vector2 v, const Vector2 normal)
 {
 	Vector2 result = {0};
 
-	float dotProduct = (v.x * normal.x + v.y * normal.y); // Dot product
+	const float dotProduct = (v.x * normal.x + v.y * normal.y); // Dot product
 
 	result.x = v.x - (2.0f * normal.x) * dotProduct;
 	result.y = v.y - (2.0f * normal.y) * dotProduct;
@@ -463,8 +463,8 @@ RMAPI Vector2 Vector2Rotate(const Vector2 v, const float angle)
 {
 	Vector2 result = {0};
 
-	float cosres = cosf(angle);
-	float sinres = sinf(angle);
+	const float cosres = cosf(angle);
+	const float sinres = sinf(angle);
 
 	result.x = v.x * cosres - v.y * sinres;
 	result.y = v.x * sinres + v.y * cosres;
@@ -477,14 +477,14 @@ RMAPI Vector2 Vector2MoveTowards(const Vector2 v, const Vector2 target, const fl
 {
 	Vector2 result = {0};
 
-	float dx    = target.x - v.x;
-	float dy    = target.y - v.y;
-	float value = (dx * dx) + (dy * dy);
+	const float dx    = target.x - v.x;
+	const float dy    = target.y - v.y;
+	const float value = (dx * dx) + (dy * dy);
 
 	if ((value == 0) || ((maxDistance >= 0) && (value <= maxDistance * maxDistance)))
 		return target;
 
-	float dist = sqrtf(value);
+	const float dist = sqrtf(value);
 
 	result.x = v.x + dx / dist * maxDistance;
 	result.y = v.y + dy / dist * maxDistance;
@@ -495,7 +495,7 @@ RMAPI Vector2 Vector2MoveTowards(const Vector2 v, const Vector2 target, const fl
 // Invert the given vector
 RMAPI Vector2 Vector2Invert(const Vector2 v)
 {
-	Vector2 result = {1.0f / v.x, 1.0f / v.y};
+	const Vector2 result = {1.0f / v.x, 1.0f / v.y};
 
 	return result;
 }
@@ -546,7 +546,7 @@ RMAPI int Vector2Equals(const Vector2 p, const Vector2 q)
     #define EPSILON 0.000001f
 #endif
 
-	int result = ((fabsf(p.x - q.x)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.x), fabsf(q.x))))) &&
+	const int result = ((fabsf(p.x - q.x)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.x), fabsf(q.x))))) &&
 	             ((fabsf(p.y - q.y)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.y), fabsf(q.y)))));
 
 	return result;
@@ -561,7 +561,7 @@ RMAPI Vector2 Vector2Refract(Vector2 v, const Vector2 n, const float r)
 {
 	Vector2 result = {0};
 
-	float dot = v.x * n.x + v.y * n.y;
+	const float dot = v.x * n.x + v.y * n.y;
 	float d   = 1.0f - r * r * (1.0f - dot * dot);
 
 	if (d >= 0.0f)
@@ -583,7 +583,7 @@ RMAPI Vector2 Vector2Refract(Vector2 v, const Vector2 n, const float r)
 // Vector with components value 0.0f
 RMAPI Vector3 Vector3Zero(void)
 {
-	Vector3 result = {0.0f, 0.0f, 0.0f};
+	const Vector3 result = {0.0f, 0.0f, 0.0f};
 
 	return result;
 }
@@ -591,7 +591,7 @@ RMAPI Vector3 Vector3Zero(void)
 // Vector with components value 1.0f
 RMAPI Vector3 Vector3One(void)
 {
-	Vector3 result = {1.0f, 1.0f, 1.0f};
+	const Vector3 result = {1.0f, 1.0f, 1.0f};
 
 	return result;
 }
@@ -599,7 +599,7 @@ RMAPI Vector3 Vector3One(void)
 // Add two vectors
 RMAPI Vector3 Vector3Add(const Vector3 v1, const Vector3 v2)
 {
-	Vector3 result = {v1.x + v2.x, v1.y + v2.y, v1.z + v2.z};
+	const Vector3 result = {v1.x + v2.x, v1.y + v2.y, v1.z + v2.z};
 
 	return result;
 }
@@ -607,7 +607,7 @@ RMAPI Vector3 Vector3Add(const Vector3 v1, const Vector3 v2)
 // Add vector and float value
 RMAPI Vector3 Vector3AddValue(const Vector3 v, const float add)
 {
-	Vector3 result = {v.x + add, v.y + add, v.z + add};
+	const Vector3 result = {v.x + add, v.y + add, v.z + add};
 
 	return result;
 }
@@ -615,7 +615,7 @@ RMAPI Vector3 Vector3AddValue(const Vector3 v, const float add)
 // Subtract two vectors
 RMAPI Vector3 Vector3Subtract(const Vector3 v1, const Vector3 v2)
 {
-	Vector3 result = {v1.x - v2.x, v1.y - v2.y, v1.z - v2.z};
+	const Vector3 result = {v1.x - v2.x, v1.y - v2.y, v1.z - v2.z};
 
 	return result;
 }
@@ -623,7 +623,7 @@ RMAPI Vector3 Vector3Subtract(const Vector3 v1, const Vector3 v2)
 // Subtract vector by float value
 RMAPI Vector3 Vector3SubtractValue(const Vector3 v, const float sub)
 {
-	Vector3 result = {v.x - sub, v.y - sub, v.z - sub};
+	const Vector3 result = {v.x - sub, v.y - sub, v.z - sub};
 
 	return result;
 }
@@ -631,7 +631,7 @@ RMAPI Vector3 Vector3SubtractValue(const Vector3 v, const float sub)
 // Multiply vector by scalar
 RMAPI Vector3 Vector3Scale(const Vector3 v, const float scalar)
 {
-	Vector3 result = {v.x * scalar, v.y * scalar, v.z * scalar};
+	const Vector3 result = {v.x * scalar, v.y * scalar, v.z * scalar};
 
 	return result;
 }
@@ -639,7 +639,7 @@ RMAPI Vector3 Vector3Scale(const Vector3 v, const float scalar)
 // Multiply vector by vector
 RMAPI Vector3 Vector3Multiply(const Vector3 v1, const Vector3 v2)
 {
-	Vector3 result = {v1.x * v2.x, v1.y * v2.y, v1.z * v2.z};
+	const Vector3 result = {v1.x * v2.x, v1.y * v2.y, v1.z * v2.z};
 
 	return result;
 }
@@ -647,7 +647,7 @@ RMAPI Vector3 Vector3Multiply(const Vector3 v1, const Vector3 v2)
 // Calculate two vectors cross product
 RMAPI Vector3 Vector3CrossProduct(const Vector3 v1, const Vector3 v2)
 {
-	Vector3 result = {v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x};
+	const Vector3 result = {v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x};
 
 	return result;
 }
@@ -663,13 +663,13 @@ RMAPI Vector3 Vector3Perpendicular(const Vector3 v)
 	if (fabsf(v.y) < min)
 	{
 		min          = fabsf(v.y);
-		Vector3 tmp  = {0.0f, 1.0f, 0.0f};
+		const Vector3 tmp  = {0.0f, 1.0f, 0.0f};
 		cardinalAxis = tmp;
 	}
 
 	if (fabsf(v.z) < min)
 	{
-		Vector3 tmp  = {0.0f, 0.0f, 1.0f};
+		const Vector3 tmp  = {0.0f, 0.0f, 1.0f};
 		cardinalAxis = tmp;
 	}
 
@@ -684,7 +684,7 @@ RMAPI Vector3 Vector3Perpendicular(const Vector3 v)
 // Calculate vector length
 RMAPI float Vector3Length(const Vector3 v)
 {
-	float result = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+	const float result = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
 
 	return result;
 }
@@ -692,7 +692,7 @@ RMAPI float Vector3Length(const Vector3 v)
 // Calculate vector square length
 RMAPI float Vector3LengthSqr(const Vector3 v)
 {
-	float result = v.x * v.x + v.y * v.y + v.z * v.z;
+	const float result = v.x * v.x + v.y * v.y + v.z * v.z;
 
 	return result;
 }
@@ -700,7 +700,7 @@ RMAPI float Vector3LengthSqr(const Vector3 v)
 // Calculate two vectors dot product
 RMAPI float Vector3DotProduct(const Vector3 v1, const Vector3 v2)
 {
-	float result = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
+	const float result = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
 
 	return result;
 }
@@ -710,9 +710,9 @@ RMAPI float Vector3Distance(const Vector3 v1, const Vector3 v2)
 {
 	float result = 0.0f;
 
-	float dx = v2.x - v1.x;
-	float dy = v2.y - v1.y;
-	float dz = v2.z - v1.z;
+	const float dx = v2.x - v1.x;
+	const float dy = v2.y - v1.y;
+	const float dz = v2.z - v1.z;
 	result   = sqrtf(dx * dx + dy * dy + dz * dz);
 
 	return result;
@@ -723,9 +723,9 @@ RMAPI float Vector3DistanceSqr(const Vector3 v1, const Vector3 v2)
 {
 	float result = 0.0f;
 
-	float dx = v2.x - v1.x;
-	float dy = v2.y - v1.y;
-	float dz = v2.z - v1.z;
+	const float dx = v2.x - v1.x;
+	const float dy = v2.y - v1.y;
+	const float dz = v2.z - v1.z;
 	result   = dx * dx + dy * dy + dz * dz;
 
 	return result;
@@ -736,9 +736,9 @@ RMAPI float Vector3Angle(const Vector3 v1, const Vector3 v2)
 {
 	float result = 0.0f;
 
-	Vector3 cross = {v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x};
-	float   len   = sqrtf(cross.x * cross.x + cross.y * cross.y + cross.z * cross.z);
-	float   dot   = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
+	const Vector3 cross = {v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x};
+	const float   len   = sqrtf(cross.x * cross.x + cross.y * cross.y + cross.z * cross.z);
+	const float   dot   = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
 	result        = atan2f(len, dot);
 
 	return result;
@@ -747,7 +747,7 @@ RMAPI float Vector3Angle(const Vector3 v1, const Vector3 v2)
 // Negate provided vector (invert direction)
 RMAPI Vector3 Vector3Negate(const Vector3 v)
 {
-	Vector3 result = {-v.x, -v.y, -v.z};
+	const Vector3 result = {-v.x, -v.y, -v.z};
 
 	return result;
 }
@@ -755,7 +755,7 @@ RMAPI Vector3 Vector3Negate(const Vector3 v)
 // Divide vector by vector
 RMAPI Vector3 Vector3Divide(const Vector3 v1, const Vector3 v2)
 {
-	Vector3 result = {v1.x / v2.x, v1.y / v2.y, v1.z / v2.z};
+	const Vector3 result = {v1.x / v2.x, v1.y / v2.y, v1.z / v2.z};
 
 	return result;
 }
@@ -765,10 +765,10 @@ RMAPI Vector3 Vector3Normalize(const Vector3 v)
 {
 	Vector3 result = v;
 
-	float length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+	const float length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
 	if (length != 0.0f)
 	{
-		float ilength = 1.0f / length;
+		const float ilength = 1.0f / length;
 
 		result.x *= ilength;
 		result.y *= ilength;
@@ -783,10 +783,10 @@ RMAPI Vector3 Vector3Project(const Vector3 v1, const Vector3 v2)
 {
 	Vector3 result = {0};
 
-	float v1dv2 = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
-	float v2dv2 = (v2.x * v2.x + v2.y * v2.y + v2.z * v2.z);
+	const float v1dv2 = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
+	const float v2dv2 = (v2.x * v2.x + v2.y * v2.y + v2.z * v2.z);
 
-	float mag = v1dv2 / v2dv2;
+	const float mag = v1dv2 / v2dv2;
 
 	result.x = v2.x * mag;
 	result.y = v2.y * mag;
@@ -800,10 +800,10 @@ RMAPI Vector3 Vector3Reject(const Vector3 v1, const Vector3 v2)
 {
 	Vector3 result = {0};
 
-	float v1dv2 = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
-	float v2dv2 = (v2.x * v2.x + v2.y * v2.y + v2.z * v2.z);
+	const float v1dv2 = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
+	const float v2dv2 = (v2.x * v2.x + v2.y * v2.y + v2.z * v2.z);
 
-	float mag = v1dv2 / v2dv2;
+	const float mag = v1dv2 / v2dv2;
 
 	result.x = v1.x - (v2.x * mag);
 	result.y = v1.y - (v2.y * mag);
@@ -844,7 +844,7 @@ RMAPI void Vector3OrthoNormalize(Vector3 *v1, Vector3 *v2)
 	vn1.z *= ilength;
 
 	// Vector3CrossProduct(vn1, *v1)
-	Vector3 vn2 = {vn1.y * v1->z - vn1.z * v1->y, vn1.z * v1->x - vn1.x * v1->z, vn1.x * v1->y - vn1.y * v1->x};
+	const Vector3 vn2 = {vn1.y * v1->z - vn1.z * v1->y, vn1.z * v1->x - vn1.x * v1->z, vn1.x * v1->y - vn1.y * v1->x};
 
 	*v2 = vn2;
 }
@@ -854,9 +854,9 @@ RMAPI Vector3 Vector3Transform(const Vector3 v, Matrix mat)
 {
 	Vector3 result = {0};
 
-	float x = v.x;
-	float y = v.y;
-	float z = v.z;
+	const float x = v.x;
+	const float y = v.y;
+	const float z = v.z;
 
 	result.x = mat.m0 * x + mat.m4 * y + mat.m8 * z + mat.m12;
 	result.y = mat.m1 * x + mat.m5 * y + mat.m9 * z + mat.m13;
@@ -889,18 +889,18 @@ RMAPI Vector3 Vector3RotateByAxisAngle(const Vector3 v, Vector3 axis, float angl
 	float length = sqrtf(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
 	if (length == 0.0f)
 		length = 1.0f;
-	float ilength = 1.0f / length;
+	const float ilength = 1.0f / length;
 	axis.x *= ilength;
 	axis.y *= ilength;
 	axis.z *= ilength;
 
 	angle /= 2.0f;
 	float a   = sinf(angle);
-	float b   = axis.x * a;
-	float c   = axis.y * a;
-	float d   = axis.z * a;
+	const float b   = axis.x * a;
+	const float c   = axis.y * a;
+	const float d   = axis.z * a;
 	a         = cosf(angle);
-	Vector3 w = {b, c, d};
+	const Vector3 w = {b, c, d};
 
 	// Vector3CrossProduct(w, v)
 	Vector3 wv = {w.y * v.z - w.z * v.y, w.z * v.x - w.x * v.z, w.x * v.y - w.y * v.x};
@@ -935,15 +935,15 @@ RMAPI Vector3 Vector3MoveTowards(const Vector3 v, const Vector3 target, const fl
 {
 	Vector3 result = {0};
 
-	float dx    = target.x - v.x;
-	float dy    = target.y - v.y;
-	float dz    = target.z - v.z;
-	float value = (dx * dx) + (dy * dy) + (dz * dz);
+	const float dx    = target.x - v.x;
+	const float dy    = target.y - v.y;
+	const float dz    = target.z - v.z;
+	const float value = (dx * dx) + (dy * dy) + (dz * dz);
 
 	if ((value == 0) || ((maxDistance >= 0) && (value <= maxDistance * maxDistance)))
 		return target;
 
-	float dist = sqrtf(value);
+	const float dist = sqrtf(value);
 
 	result.x = v.x + dx / dist * maxDistance;
 	result.y = v.y + dy / dist * maxDistance;
@@ -970,8 +970,8 @@ RMAPI Vector3 Vector3CubicHermite(const Vector3 v1, const Vector3 tangent1, cons
 {
 	Vector3 result = {0};
 
-	float amountPow2 = amount * amount;
-	float amountPow3 = amount * amount * amount;
+	const float amountPow2 = amount * amount;
+	const float amountPow3 = amount * amount * amount;
 
 	result.x = (2 * amountPow3 - 3 * amountPow2 + 1) * v1.x + (amountPow3 - 2 * amountPow2 + amount) * tangent1.x + (-2 * amountPow3 + 3 * amountPow2) * v2.x + (amountPow3 - amountPow2) * tangent2.x;
 	result.y = (2 * amountPow3 - 3 * amountPow2 + 1) * v1.y + (amountPow3 - 2 * amountPow2 + amount) * tangent1.y + (-2 * amountPow3 + 3 * amountPow2) * v2.y + (amountPow3 - amountPow2) * tangent2.y;
@@ -989,7 +989,7 @@ RMAPI Vector3 Vector3Reflect(const Vector3 v, const Vector3 normal)
 	// N is the normal of the incident plane
 	// R = I - (2*N*(DotProduct[I, N]))
 
-	float dotProduct = (v.x * normal.x + v.y * normal.y + v.z * normal.z);
+	const float dotProduct = (v.x * normal.x + v.y * normal.y + v.z * normal.z);
 
 	result.x = v.x - (2.0f * normal.x) * dotProduct;
 	result.y = v.y - (2.0f * normal.y) * dotProduct;
@@ -1028,16 +1028,16 @@ RMAPI Vector3 Vector3Barycenter(const Vector3 p, const Vector3 a, const Vector3 
 {
 	Vector3 result = {0};
 
-	Vector3 v0  = {b.x - a.x, b.y - a.y, b.z - a.z};   // Vector3Subtract(b, a)
-	Vector3 v1  = {c.x - a.x, c.y - a.y, c.z - a.z};   // Vector3Subtract(c, a)
-	Vector3 v2  = {p.x - a.x, p.y - a.y, p.z - a.z};   // Vector3Subtract(p, a)
-	float   d00 = (v0.x * v0.x + v0.y * v0.y + v0.z * v0.z);    // Vector3DotProduct(v0, v0)
-	float   d01 = (v0.x * v1.x + v0.y * v1.y + v0.z * v1.z);    // Vector3DotProduct(v0, v1)
-	float   d11 = (v1.x * v1.x + v1.y * v1.y + v1.z * v1.z);    // Vector3DotProduct(v1, v1)
-	float   d20 = (v2.x * v0.x + v2.y * v0.y + v2.z * v0.z);    // Vector3DotProduct(v2, v0)
-	float   d21 = (v2.x * v1.x + v2.y * v1.y + v2.z * v1.z);    // Vector3DotProduct(v2, v1)
+	const Vector3 v0  = {b.x - a.x, b.y - a.y, b.z - a.z};   // Vector3Subtract(b, a)
+	const Vector3 v1  = {c.x - a.x, c.y - a.y, c.z - a.z};   // Vector3Subtract(c, a)
+	const Vector3 v2  = {p.x - a.x, p.y - a.y, p.z - a.z};   // Vector3Subtract(p, a)
+	const float   d00 = (v0.x * v0.x + v0.y * v0.y + v0.z * v0.z);    // Vector3DotProduct(v0, v0)
+	const float   d01 = (v0.x * v1.x + v0.y * v1.y + v0.z * v1.z);    // Vector3DotProduct(v0, v1)
+	const float   d11 = (v1.x * v1.x + v1.y * v1.y + v1.z * v1.z);    // Vector3DotProduct(v1, v1)
+	const float   d20 = (v2.x * v0.x + v2.y * v0.y + v2.z * v0.z);    // Vector3DotProduct(v2, v0)
+	const float   d21 = (v2.x * v1.x + v2.y * v1.y + v2.z * v1.z);    // Vector3DotProduct(v2, v1)
 
-	float denom = d00 * d11 - d01 * d01;
+	const float denom = d00 * d11 - d01 * d01;
 
 	result.y = (d11 * d20 - d01 * d21) / denom;
 	result.z = (d00 * d21 - d01 * d20) / denom;
@@ -1148,7 +1148,7 @@ RMAPI float3 Vector3ToFloatV(const Vector3 v)
 // Invert the given vector
 RMAPI Vector3 Vector3Invert(const Vector3 v)
 {
-	Vector3 result = {1.0f / v.x, 1.0f / v.y, 1.0f / v.z};
+	const Vector3 result = {1.0f / v.x, 1.0f / v.y, 1.0f / v.z};
 
 	return result;
 }
@@ -1201,7 +1201,7 @@ RMAPI int Vector3Equals(const Vector3 p, const Vector3 q)
     #define EPSILON 0.000001f
 #endif
 
-	int result = ((fabsf(p.x - q.x)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.x), fabsf(q.x))))) &&
+	const int result = ((fabsf(p.x - q.x)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.x), fabsf(q.x))))) &&
 	             ((fabsf(p.y - q.y)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.y), fabsf(q.y))))) &&
 	             ((fabsf(p.z - q.z)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.z), fabsf(q.z)))));
 
@@ -1217,7 +1217,7 @@ RMAPI Vector3 Vector3Refract(Vector3 v, const Vector3 n, const float r)
 {
 	Vector3 result = {0};
 
-	float dot = v.x * n.x + v.y * n.y + v.z * n.z;
+	const float dot = v.x * n.x + v.y * n.y + v.z * n.z;
 	float d   = 1.0f - r * r * (1.0f - dot * dot);
 
 	if (d >= 0.0f)
@@ -1239,19 +1239,19 @@ RMAPI Vector3 Vector3Refract(Vector3 v, const Vector3 n, const float r)
 
 RMAPI Vector4 Vector4Zero(void)
 {
-	Vector4 result = {0.0f, 0.0f, 0.0f, 0.0f};
+	const Vector4 result = {0.0f, 0.0f, 0.0f, 0.0f};
 	return result;
 }
 
 RMAPI Vector4 Vector4One(void)
 {
-	Vector4 result = {1.0f, 1.0f, 1.0f, 1.0f};
+	const Vector4 result = {1.0f, 1.0f, 1.0f, 1.0f};
 	return result;
 }
 
 RMAPI Vector4 Vector4Add(const Vector4 v1, const Vector4 v2)
 {
-	Vector4 result = {
+	const Vector4 result = {
 		v1.x + v2.x,
 		v1.y + v2.y,
 		v1.z + v2.z,
@@ -1262,7 +1262,7 @@ RMAPI Vector4 Vector4Add(const Vector4 v1, const Vector4 v2)
 
 RMAPI Vector4 Vector4AddValue(const Vector4 v, const float add)
 {
-	Vector4 result = {
+	const Vector4 result = {
 		v.x + add,
 		v.y + add,
 		v.z + add,
@@ -1273,7 +1273,7 @@ RMAPI Vector4 Vector4AddValue(const Vector4 v, const float add)
 
 RMAPI Vector4 Vector4Subtract(const Vector4 v1, const Vector4 v2)
 {
-	Vector4 result = {
+	const Vector4 result = {
 		v1.x - v2.x,
 		v1.y - v2.y,
 		v1.z - v2.z,
@@ -1284,7 +1284,7 @@ RMAPI Vector4 Vector4Subtract(const Vector4 v1, const Vector4 v2)
 
 RMAPI Vector4 Vector4SubtractValue(const Vector4 v, const float add)
 {
-	Vector4 result = {
+	const Vector4 result = {
 		v.x - add,
 		v.y - add,
 		v.z - add,
@@ -1295,26 +1295,26 @@ RMAPI Vector4 Vector4SubtractValue(const Vector4 v, const float add)
 
 RMAPI float Vector4Length(const Vector4 v)
 {
-	float result = sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z) + (v.w * v.w));
+	const float result = sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z) + (v.w * v.w));
 	return result;
 }
 
 RMAPI float Vector4LengthSqr(const Vector4 v)
 {
-	float result = (v.x * v.x) + (v.y * v.y) + (v.z * v.z) + (v.w * v.w);
+	const float result = (v.x * v.x) + (v.y * v.y) + (v.z * v.z) + (v.w * v.w);
 	return result;
 }
 
 RMAPI float Vector4DotProduct(const Vector4 v1, const Vector4 v2)
 {
-	float result = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w);
+	const float result = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w);
 	return result;
 }
 
 // Calculate distance between two vectors
 RMAPI float Vector4Distance(const Vector4 v1, const Vector4 v2)
 {
-	float result = sqrtf(
+	const float result = sqrtf(
 	                     (v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y) +
 	                     (v1.z - v2.z) * (v1.z - v2.z) + (v1.w - v2.w) * (v1.w - v2.w));
 	return result;
@@ -1323,7 +1323,7 @@ RMAPI float Vector4Distance(const Vector4 v1, const Vector4 v2)
 // Calculate square distance between two vectors
 RMAPI float Vector4DistanceSqr(const Vector4 v1, const Vector4 v2)
 {
-	float result =
+	const float result =
 			(v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y) +
 			(v1.z - v2.z) * (v1.z - v2.z) + (v1.w - v2.w) * (v1.w - v2.w);
 
@@ -1332,28 +1332,28 @@ RMAPI float Vector4DistanceSqr(const Vector4 v1, const Vector4 v2)
 
 RMAPI Vector4 Vector4Scale(const Vector4 v, const float scale)
 {
-	Vector4 result = {v.x * scale, v.y * scale, v.z * scale, v.w * scale};
+	const Vector4 result = {v.x * scale, v.y * scale, v.z * scale, v.w * scale};
 	return result;
 }
 
 // Multiply vector by vector
 RMAPI Vector4 Vector4Multiply(const Vector4 v1, const Vector4 v2)
 {
-	Vector4 result = {v1.x * v2.x, v1.y * v2.y, v1.z * v2.z, v1.w * v2.w};
+	const Vector4 result = {v1.x * v2.x, v1.y * v2.y, v1.z * v2.z, v1.w * v2.w};
 	return result;
 }
 
 // Negate vector
 RMAPI Vector4 Vector4Negate(const Vector4 v)
 {
-	Vector4 result = {-v.x, -v.y, -v.z, -v.w};
+	const Vector4 result = {-v.x, -v.y, -v.z, -v.w};
 	return result;
 }
 
 // Divide vector by vector
 RMAPI Vector4 Vector4Divide(const Vector4 v1, const Vector4 v2)
 {
-	Vector4 result = {v1.x / v2.x, v1.y / v2.y, v1.z / v2.z, v1.w / v2.w};
+	const Vector4 result = {v1.x / v2.x, v1.y / v2.y, v1.z / v2.z, v1.w / v2.w};
 	return result;
 }
 
@@ -1361,11 +1361,11 @@ RMAPI Vector4 Vector4Divide(const Vector4 v1, const Vector4 v2)
 RMAPI Vector4 Vector4Normalize(const Vector4 v)
 {
 	Vector4 result = {0};
-	float   length = sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z) + (v.w * v.w));
+	const float   length = sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z) + (v.w * v.w));
 
 	if (length > 0)
 	{
-		float ilength = 1.0f / length;
+		const float ilength = 1.0f / length;
 		result.x      = v.x * ilength;
 		result.y      = v.y * ilength;
 		result.z      = v.z * ilength;
@@ -1419,16 +1419,16 @@ RMAPI Vector4 Vector4MoveTowards(const Vector4 v, const Vector4 target, const fl
 {
 	Vector4 result = {0};
 
-	float dx    = target.x - v.x;
-	float dy    = target.y - v.y;
-	float dz    = target.z - v.z;
-	float dw    = target.w - v.w;
-	float value = (dx * dx) + (dy * dy) + (dz * dz) + (dw * dw);
+	const float dx    = target.x - v.x;
+	const float dy    = target.y - v.y;
+	const float dz    = target.z - v.z;
+	const float dw    = target.w - v.w;
+	const float value = (dx * dx) + (dy * dy) + (dz * dz) + (dw * dw);
 
 	if ((value == 0) || ((maxDistance >= 0) && (value <= maxDistance * maxDistance)))
 		return target;
 
-	float dist = sqrtf(value);
+	const float dist = sqrtf(value);
 
 	result.x = v.x + dx / dist * maxDistance;
 	result.y = v.y + dy / dist * maxDistance;
@@ -1441,7 +1441,7 @@ RMAPI Vector4 Vector4MoveTowards(const Vector4 v, const Vector4 target, const fl
 // Invert the given vector
 RMAPI Vector4 Vector4Invert(const Vector4 v)
 {
-	Vector4 result = {1.0f / v.x, 1.0f / v.y, 1.0f / v.z, 1.0f / v.w};
+	const Vector4 result = {1.0f / v.x, 1.0f / v.y, 1.0f / v.z, 1.0f / v.w};
 	return result;
 }
 
@@ -1452,7 +1452,7 @@ RMAPI int Vector4Equals(const Vector4 p, const Vector4 q)
     #define EPSILON 0.000001f
 #endif
 
-	int result = ((fabsf(p.x - q.x)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.x), fabsf(q.x))))) &&
+	const int result = ((fabsf(p.x - q.x)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.x), fabsf(q.x))))) &&
 	             ((fabsf(p.y - q.y)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.y), fabsf(q.y))))) &&
 	             ((fabsf(p.z - q.z)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.z), fabsf(q.z))))) &&
 	             ((fabsf(p.w - q.w)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.w), fabsf(q.w)))));
@@ -1487,7 +1487,7 @@ RMAPI float MatrixDeterminant(Matrix mat)
 // Get the trace of the matrix (sum of the values along the diagonal)
 RMAPI float MatrixTrace(Matrix mat)
 {
-	float result = (mat.m0 + mat.m5 + mat.m10 + mat.m15);
+	const float result = (mat.m0 + mat.m5 + mat.m10 + mat.m15);
 
 	return result;
 }
@@ -1528,21 +1528,21 @@ RMAPI Matrix MatrixInvert(Matrix mat)
 	float a20 = mat.m8,  a21 = mat.m9,  a22 = mat.m10, a23 = mat.m11;
 	float a30 = mat.m12, a31 = mat.m13, a32 = mat.m14, a33 = mat.m15;
 
-	float b00 = a00 * a11 - a01 * a10;
-	float b01 = a00 * a12 - a02 * a10;
-	float b02 = a00 * a13 - a03 * a10;
-	float b03 = a01 * a12 - a02 * a11;
-	float b04 = a01 * a13 - a03 * a11;
-	float b05 = a02 * a13 - a03 * a12;
-	float b06 = a20 * a31 - a21 * a30;
-	float b07 = a20 * a32 - a22 * a30;
-	float b08 = a20 * a33 - a23 * a30;
-	float b09 = a21 * a32 - a22 * a31;
-	float b10 = a21 * a33 - a23 * a31;
-	float b11 = a22 * a33 - a23 * a32;
+	const float b00 = a00 * a11 - a01 * a10;
+	const float b01 = a00 * a12 - a02 * a10;
+	const float b02 = a00 * a13 - a03 * a10;
+	const float b03 = a01 * a12 - a02 * a11;
+	const float b04 = a01 * a13 - a03 * a11;
+	const float b05 = a02 * a13 - a03 * a12;
+	const float b06 = a20 * a31 - a21 * a30;
+	const float b07 = a20 * a32 - a22 * a30;
+	const float b08 = a20 * a33 - a23 * a30;
+	const float b09 = a21 * a32 - a22 * a31;
+	const float b10 = a21 * a33 - a23 * a31;
+	const float b11 = a22 * a33 - a23 * a32;
 
 	// Calculate the invert determinant (inlined to avoid double-caching)
-	float invDet = 1.0f / (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
+	const float invDet = 1.0f / (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
 
 	result.m0  = (a11 * b11 - a12 * b10 + a13 * b09) * invDet;
 	result.m1  = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
@@ -1567,7 +1567,7 @@ RMAPI Matrix MatrixInvert(Matrix mat)
 // Get identity matrix
 RMAPI Matrix MatrixIdentity(void)
 {
-	Matrix result = {
+	const Matrix result = {
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
@@ -1656,7 +1656,7 @@ RMAPI Matrix MatrixMultiply(Matrix left, Matrix right)
 // Get translation matrix
 RMAPI Matrix MatrixTranslate(const float x, const float y, const float z)
 {
-	Matrix result = {
+	const Matrix result = {
 		1.0f, 0.0f, 0.0f, x,
 		0.0f, 1.0f, 0.0f, y,
 		0.0f, 0.0f, 1.0f, z,
@@ -1674,19 +1674,19 @@ RMAPI Matrix MatrixRotate(const Vector3 axis, const float angle)
 
 	float x = axis.x, y = axis.y, z = axis.z;
 
-	float lengthSquared = x * x + y * y + z * z;
+	const float lengthSquared = x * x + y * y + z * z;
 
 	if ((lengthSquared != 1.0f) && (lengthSquared != 0.0f))
 	{
-		float ilength = 1.0f / sqrtf(lengthSquared);
+		const float ilength = 1.0f / sqrtf(lengthSquared);
 		x *= ilength;
 		y *= ilength;
 		z *= ilength;
 	}
 
-	float sinres = sinf(angle);
-	float cosres = cosf(angle);
-	float t      = 1.0f - cosres;
+	const float sinres = sinf(angle);
+	const float cosres = cosf(angle);
+	const float t      = 1.0f - cosres;
 
 	result.m0 = x * x * t + cosres;
 	result.m1 = y * x * t + z * sinres;
@@ -1722,8 +1722,8 @@ RMAPI Matrix MatrixRotateX(const float angle)
 		0.0f, 0.0f, 0.0f, 1.0f
 	}; // MatrixIdentity()
 
-	float cosres = cosf(angle);
-	float sinres = sinf(angle);
+	const float cosres = cosf(angle);
+	const float sinres = sinf(angle);
 
 	result.m5  = cosres;
 	result.m6  = sinres;
@@ -1744,8 +1744,8 @@ RMAPI Matrix MatrixRotateY(const float angle)
 		0.0f, 0.0f, 0.0f, 1.0f
 	}; // MatrixIdentity()
 
-	float cosres = cosf(angle);
-	float sinres = sinf(angle);
+	const float cosres = cosf(angle);
+	const float sinres = sinf(angle);
 
 	result.m0  = cosres;
 	result.m2  = -sinres;
@@ -1766,8 +1766,8 @@ RMAPI Matrix MatrixRotateZ(const float angle)
 		0.0f, 0.0f, 0.0f, 1.0f
 	}; // MatrixIdentity()
 
-	float cosres = cosf(angle);
-	float sinres = sinf(angle);
+	const float cosres = cosf(angle);
+	const float sinres = sinf(angle);
 
 	result.m0 = cosres;
 	result.m1 = sinres;
@@ -1788,12 +1788,12 @@ RMAPI Matrix MatrixRotateXYZ(const Vector3 angle)
 		0.0f, 0.0f, 0.0f, 1.0f
 	}; // MatrixIdentity()
 
-	float cosz = cosf(-angle.z);
-	float sinz = sinf(-angle.z);
-	float cosy = cosf(-angle.y);
-	float siny = sinf(-angle.y);
-	float cosx = cosf(-angle.x);
-	float sinx = sinf(-angle.x);
+	const float cosz = cosf(-angle.z);
+	const float sinz = sinf(-angle.z);
+	const float cosy = cosf(-angle.y);
+	const float siny = sinf(-angle.y);
+	const float cosx = cosf(-angle.x);
+	const float sinx = sinf(-angle.x);
 
 	result.m0 = cosz * cosy;
 	result.m1 = (cosz * siny * sinx) - (sinz * cosx);
@@ -1816,12 +1816,12 @@ RMAPI Matrix MatrixRotateZYX(const Vector3 angle)
 {
 	Matrix result = {0};
 
-	float cz = cosf(angle.z);
-	float sz = sinf(angle.z);
-	float cy = cosf(angle.y);
-	float sy = sinf(angle.y);
-	float cx = cosf(angle.x);
-	float sx = sinf(angle.x);
+	const float cz = cosf(angle.z);
+	const float sz = sinf(angle.z);
+	const float cy = cosf(angle.y);
+	const float sy = sinf(angle.y);
+	const float cx = cosf(angle.x);
+	const float sx = sinf(angle.x);
 
 	result.m0  = cz * cy;
 	result.m4  = cz * sy * sx - cx * sz;
@@ -1849,7 +1849,7 @@ RMAPI Matrix MatrixRotateZYX(const Vector3 angle)
 // Get scaling matrix
 RMAPI Matrix MatrixScale(const float x, const float y, const float z)
 {
-	Matrix result = {
+	const Matrix result = {
 		x, 0.0f, 0.0f, 0.0f,
 		0.0f, y, 0.0f, 0.0f,
 		0.0f, 0.0f, z, 0.0f,
@@ -1864,9 +1864,9 @@ RMAPI Matrix MatrixFrustum(const double left, const double right, const double b
 {
 	Matrix result = {0};
 
-	float rl = (float)(right - left);
-	float tb = (float)(top - bottom);
-	float fn = (float)(farPlane - nearPlane);
+	const float rl = (float)(right - left);
+	const float tb = (float)(top - bottom);
+	const float fn = (float)(farPlane - nearPlane);
 
 	result.m0 = ((float)nearPlane * 2.0f) / rl;
 	result.m1 = 0.0f;
@@ -1897,15 +1897,15 @@ RMAPI Matrix MatrixPerspective(const double fovY, const double aspect, const dou
 {
 	Matrix result = {0};
 
-	double top    = nearPlane * tan(fovY * 0.5);
-	double bottom = -top;
-	double right  = top * aspect;
-	double left   = -right;
+	const double top    = nearPlane * tan(fovY * 0.5);
+	const double bottom = -top;
+	const double right  = top * aspect;
+	const double left   = -right;
 
 	// MatrixFrustum(-right, right, -top, top, near, far);
-	float rl = (float)(right - left);
-	float tb = (float)(top - bottom);
-	float fn = (float)(farPlane - nearPlane);
+	const float rl = (float)(right - left);
+	const float tb = (float)(top - bottom);
+	const float fn = (float)(farPlane - nearPlane);
 
 	result.m0  = ((float)nearPlane * 2.0f) / rl;
 	result.m5  = ((float)nearPlane * 2.0f) / tb;
@@ -1923,9 +1923,9 @@ RMAPI Matrix MatrixOrtho(const double left, const double right, const double bot
 {
 	Matrix result = {0};
 
-	float rl = (float)(right - left);
-	float tb = (float)(top - bottom);
-	float fn = (float)(farPlane - nearPlane);
+	const float rl = (float)(right - left);
+	const float tb = (float)(top - bottom);
+	const float fn = (float)(farPlane - nearPlane);
 
 	result.m0  = 2.0f / rl;
 	result.m1  = 0.0f;
@@ -1982,7 +1982,7 @@ RMAPI Matrix MatrixLookAt(const Vector3 eye, const Vector3 target, const Vector3
 	vx.z *= ilength;
 
 	// Vector3CrossProduct(vz, vx)
-	Vector3 vy = {vz.y * vx.z - vz.z * vx.y, vz.z * vx.x - vz.x * vx.z, vz.x * vx.y - vz.y * vx.x};
+	const Vector3 vy = {vz.y * vx.z - vz.z * vx.y, vz.z * vx.x - vz.x * vx.z, vz.x * vx.y - vz.y * vx.x};
 
 	result.m0  = vx.x;
 	result.m1  = vy.x;
@@ -2036,7 +2036,7 @@ RMAPI float16 MatrixToFloatV(Matrix mat)
 // Add two quaternions
 RMAPI Quaternion QuaternionAdd(const Quaternion q1, const Quaternion q2)
 {
-	Quaternion result = {q1.x + q2.x, q1.y + q2.y, q1.z + q2.z, q1.w + q2.w};
+	const Quaternion result = {q1.x + q2.x, q1.y + q2.y, q1.z + q2.z, q1.w + q2.w};
 
 	return result;
 }
@@ -2044,7 +2044,7 @@ RMAPI Quaternion QuaternionAdd(const Quaternion q1, const Quaternion q2)
 // Add quaternion and float value
 RMAPI Quaternion QuaternionAddValue(const Quaternion q, const float add)
 {
-	Quaternion result = {q.x + add, q.y + add, q.z + add, q.w + add};
+	const Quaternion result = {q.x + add, q.y + add, q.z + add, q.w + add};
 
 	return result;
 }
@@ -2052,7 +2052,7 @@ RMAPI Quaternion QuaternionAddValue(const Quaternion q, const float add)
 // Subtract two quaternions
 RMAPI Quaternion QuaternionSubtract(const Quaternion q1, const Quaternion q2)
 {
-	Quaternion result = {q1.x - q2.x, q1.y - q2.y, q1.z - q2.z, q1.w - q2.w};
+	const Quaternion result = {q1.x - q2.x, q1.y - q2.y, q1.z - q2.z, q1.w - q2.w};
 
 	return result;
 }
@@ -2060,7 +2060,7 @@ RMAPI Quaternion QuaternionSubtract(const Quaternion q1, const Quaternion q2)
 // Subtract quaternion and float value
 RMAPI Quaternion QuaternionSubtractValue(const Quaternion q, const float sub)
 {
-	Quaternion result = {q.x - sub, q.y - sub, q.z - sub, q.w - sub};
+	const Quaternion result = {q.x - sub, q.y - sub, q.z - sub, q.w - sub};
 
 	return result;
 }
@@ -2068,7 +2068,7 @@ RMAPI Quaternion QuaternionSubtractValue(const Quaternion q, const float sub)
 // Get identity quaternion
 RMAPI Quaternion QuaternionIdentity(void)
 {
-	Quaternion result = {0.0f, 0.0f, 0.0f, 1.0f};
+	const Quaternion result = {0.0f, 0.0f, 0.0f, 1.0f};
 
 	return result;
 }
@@ -2076,7 +2076,7 @@ RMAPI Quaternion QuaternionIdentity(void)
 // Computes the length of a quaternion
 RMAPI float QuaternionLength(const Quaternion q)
 {
-	float result = sqrtf(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+	const float result = sqrtf(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
 
 	return result;
 }
@@ -2089,7 +2089,7 @@ RMAPI Quaternion QuaternionNormalize(const Quaternion q)
 	float length = sqrtf(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
 	if (length == 0.0f)
 		length = 1.0f;
-	float ilength = 1.0f / length;
+	const float ilength = 1.0f / length;
 
 	result.x = q.x * ilength;
 	result.y = q.y * ilength;
@@ -2104,11 +2104,11 @@ RMAPI Quaternion QuaternionInvert(const Quaternion q)
 {
 	Quaternion result = q;
 
-	float lengthSq = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+	const float lengthSq = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
 
 	if (lengthSq != 0.0f)
 	{
-		float invLength = 1.0f / lengthSq;
+		const float invLength = 1.0f / lengthSq;
 
 		result.x *= -invLength;
 		result.y *= -invLength;
@@ -2151,7 +2151,7 @@ RMAPI Quaternion QuaternionScale(const Quaternion q, const float mul)
 // Divide two quaternions
 RMAPI Quaternion QuaternionDivide(const Quaternion q1, const Quaternion q2)
 {
-	Quaternion result = {q1.x / q2.x, q1.y / q2.y, q1.z / q2.z, q1.w / q2.w};
+	const Quaternion result = {q1.x / q2.x, q1.y / q2.y, q1.z / q2.z, q1.w / q2.w};
 
 	return result;
 }
@@ -2181,11 +2181,11 @@ RMAPI Quaternion QuaternionNlerp(const Quaternion q1, const Quaternion q2, const
 	result.w = q1.w + amount * (q2.w - q1.w);
 
 	// QuaternionNormalize(q);
-	Quaternion q      = result;
+	const Quaternion q      = result;
 	float      length = sqrtf(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
 	if (length == 0.0f)
 		length = 1.0f;
-	float ilength = 1.0f / length;
+	const float ilength = 1.0f / length;
 
 	result.x = q.x * ilength;
 	result.y = q.y * ilength;
@@ -2221,8 +2221,8 @@ RMAPI Quaternion QuaternionSlerp(const Quaternion q1, Quaternion q2, const float
 		result = QuaternionNlerp(q1, q2, amount);
 	else
 	{
-		float halfTheta    = acosf(cosHalfTheta);
-		float sinHalfTheta = sqrtf(1.0f - cosHalfTheta * cosHalfTheta);
+		const float halfTheta    = acosf(cosHalfTheta);
+		const float sinHalfTheta = sqrtf(1.0f - cosHalfTheta * cosHalfTheta);
 
 		if (fabsf(sinHalfTheta) < EPSILON)
 		{
@@ -2233,8 +2233,8 @@ RMAPI Quaternion QuaternionSlerp(const Quaternion q1, Quaternion q2, const float
 		}
 		else
 		{
-			float ratioA = sinf((1 - amount) * halfTheta) / sinHalfTheta;
-			float ratioB = sinf(amount * halfTheta) / sinHalfTheta;
+			const float ratioA = sinf((1 - amount) * halfTheta) / sinHalfTheta;
+			const float ratioB = sinf(amount * halfTheta) / sinHalfTheta;
 
 			result.x = (q1.x * ratioA + q2.x * ratioB);
 			result.y = (q1.y * ratioA + q2.y * ratioB);
@@ -2250,17 +2250,17 @@ RMAPI Quaternion QuaternionSlerp(const Quaternion q1, Quaternion q2, const float
 // as described in the GLTF 2.0 specification: https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#interpolation-cubic
 RMAPI Quaternion QuaternionCubicHermiteSpline(const Quaternion q1, const Quaternion outTangent1, const Quaternion q2, const Quaternion inTangent2, const float t)
 {
-	float t2  = t * t;
-	float t3  = t2 * t;
-	float h00 = 2 * t3 - 3 * t2 + 1;
-	float h10 = t3 - 2 * t2 + t;
-	float h01 = -2 * t3 + 3 * t2;
-	float h11 = t3 - t2;
+	const float t2  = t * t;
+	const float t3  = t2 * t;
+	const float h00 = 2 * t3 - 3 * t2 + 1;
+	const float h10 = t3 - 2 * t2 + t;
+	const float h01 = -2 * t3 + 3 * t2;
+	const float h11 = t3 - t2;
 
-	Quaternion p0 = QuaternionScale(q1, h00);
-	Quaternion m0 = QuaternionScale(outTangent1, h10);
-	Quaternion p1 = QuaternionScale(q2, h01);
-	Quaternion m1 = QuaternionScale(inTangent2, h11);
+	const Quaternion p0 = QuaternionScale(q1, h00);
+	const Quaternion m0 = QuaternionScale(outTangent1, h10);
+	const Quaternion p1 = QuaternionScale(q2, h01);
+	const Quaternion m1 = QuaternionScale(inTangent2, h11);
 
 	Quaternion result = {0};
 
@@ -2277,8 +2277,8 @@ RMAPI Quaternion QuaternionFromVector3ToVector3(const Vector3 from, const Vector
 {
 	Quaternion result = {0};
 
-	float   cos2Theta = (from.x * to.x + from.y * to.y + from.z * to.z);    // Vector3DotProduct(from, to)
-	Vector3 cross     = {from.y * to.z - from.z * to.y, from.z * to.x - from.x * to.z, from.x * to.y - from.y * to.x}; // Vector3CrossProduct(from, to)
+	const float   cos2Theta = (from.x * to.x + from.y * to.y + from.z * to.z);    // Vector3DotProduct(from, to)
+	const Vector3 cross     = {from.y * to.z - from.z * to.y, from.z * to.x - from.x * to.z, from.x * to.y - from.y * to.x}; // Vector3CrossProduct(from, to)
 
 	result.x = cross.x;
 	result.y = cross.y;
@@ -2287,11 +2287,11 @@ RMAPI Quaternion QuaternionFromVector3ToVector3(const Vector3 from, const Vector
 
 	// QuaternionNormalize(q);
 	// NOTE: Normalize to essentially nlerp the original and identity to 0.5
-	Quaternion q      = result;
+	const Quaternion q      = result;
 	float      length = sqrtf(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
 	if (length == 0.0f)
 		length = 1.0f;
-	float ilength = 1.0f / length;
+	const float ilength = 1.0f / length;
 
 	result.x = q.x * ilength;
 	result.y = q.y * ilength;
@@ -2306,10 +2306,10 @@ RMAPI Quaternion QuaternionFromMatrix(Matrix mat)
 {
 	Quaternion result = {0};
 
-	float fourWSquaredMinus1 = mat.m0 + mat.m5 + mat.m10;
-	float fourXSquaredMinus1 = mat.m0 - mat.m5 - mat.m10;
-	float fourYSquaredMinus1 = mat.m5 - mat.m0 - mat.m10;
-	float fourZSquaredMinus1 = mat.m10 - mat.m0 - mat.m5;
+	const float fourWSquaredMinus1 = mat.m0 + mat.m5 + mat.m10;
+	const float fourXSquaredMinus1 = mat.m0 - mat.m5 - mat.m10;
+	const float fourYSquaredMinus1 = mat.m5 - mat.m0 - mat.m10;
+	const float fourZSquaredMinus1 = mat.m10 - mat.m0 - mat.m5;
 
 	int   biggestIndex             = 0;
 	float fourBiggestSquaredMinus1 = fourWSquaredMinus1;
@@ -2331,8 +2331,8 @@ RMAPI Quaternion QuaternionFromMatrix(Matrix mat)
 		biggestIndex             = 3;
 	}
 
-	float biggestVal = sqrtf(fourBiggestSquaredMinus1 + 1.0f) * 0.5f;
-	float mult       = 0.25f / biggestVal;
+	const float biggestVal = sqrtf(fourBiggestSquaredMinus1 + 1.0f) * 0.5f;
+	const float mult       = 0.25f / biggestVal;
 
 	switch (biggestIndex)
 	{
@@ -2375,15 +2375,15 @@ RMAPI Matrix QuaternionToMatrix(const Quaternion q)
 		0.0f, 0.0f, 0.0f, 1.0f
 	}; // MatrixIdentity()
 
-	float a2 = q.x * q.x;
-	float b2 = q.y * q.y;
-	float c2 = q.z * q.z;
-	float ac = q.x * q.z;
-	float ab = q.x * q.y;
-	float bc = q.y * q.z;
-	float ad = q.w * q.x;
-	float bd = q.w * q.y;
-	float cd = q.w * q.z;
+	const float a2 = q.x * q.x;
+	const float b2 = q.y * q.y;
+	const float c2 = q.z * q.z;
+	const float ac = q.x * q.z;
+	const float ab = q.x * q.y;
+	const float bc = q.y * q.z;
+	const float ad = q.w * q.x;
+	const float bd = q.w * q.y;
+	const float cd = q.w * q.z;
 
 	result.m0 = 1 - 2 * (b2 + c2);
 	result.m1 = 2 * (ab + cd);
@@ -2406,7 +2406,7 @@ RMAPI Quaternion QuaternionFromAxisAngle(Vector3 axis, float angle)
 {
 	Quaternion result = {0.0f, 0.0f, 0.0f, 1.0f};
 
-	float axisLength = sqrtf(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
+	const float axisLength = sqrtf(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
 
 	if (axisLength != 0.0f)
 	{
@@ -2424,8 +2424,8 @@ RMAPI Quaternion QuaternionFromAxisAngle(Vector3 axis, float angle)
 		axis.y *= ilength;
 		axis.z *= ilength;
 
-		float sinres = sinf(angle);
-		float cosres = cosf(angle);
+		const float sinres = sinf(angle);
+		const float cosres = cosf(angle);
 
 		result.x = axis.x * sinres;
 		result.y = axis.y * sinres;
@@ -2433,7 +2433,7 @@ RMAPI Quaternion QuaternionFromAxisAngle(Vector3 axis, float angle)
 		result.w = cosres;
 
 		// QuaternionNormalize(q);
-		Quaternion q = result;
+		const Quaternion q = result;
 		length       = sqrtf(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
 		if (length == 0.0f)
 			length = 1.0f;
@@ -2456,7 +2456,7 @@ RMAPI void QuaternionToAxisAngle(Quaternion q, Vector3 *outAxis, float *outAngle
 		float length = sqrtf(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
 		if (length == 0.0f)
 			length = 1.0f;
-		float ilength = 1.0f / length;
+		const float ilength = 1.0f / length;
 
 		q.x = q.x * ilength;
 		q.y = q.y * ilength;
@@ -2465,8 +2465,8 @@ RMAPI void QuaternionToAxisAngle(Quaternion q, Vector3 *outAxis, float *outAngle
 	}
 
 	Vector3 resAxis  = {0.0f, 0.0f, 0.0f};
-	float   resAngle = 2.0f * acosf(q.w);
-	float   den      = sqrtf(1.0f - q.w * q.w);
+	const float   resAngle = 2.0f * acosf(q.w);
+	const float   den      = sqrtf(1.0f - q.w * q.w);
 
 	if (den > EPSILON)
 	{
@@ -2491,12 +2491,12 @@ RMAPI Quaternion QuaternionFromEuler(const float pitch, const float yaw, const f
 {
 	Quaternion result = {0};
 
-	float x0 = cosf(pitch * 0.5f);
-	float x1 = sinf(pitch * 0.5f);
-	float y0 = cosf(yaw * 0.5f);
-	float y1 = sinf(yaw * 0.5f);
-	float z0 = cosf(roll * 0.5f);
-	float z1 = sinf(roll * 0.5f);
+	const float x0 = cosf(pitch * 0.5f);
+	const float x1 = sinf(pitch * 0.5f);
+	const float y0 = cosf(yaw * 0.5f);
+	const float y1 = sinf(yaw * 0.5f);
+	const float z0 = cosf(roll * 0.5f);
+	const float z1 = sinf(roll * 0.5f);
 
 	result.x = x1 * y0 * z0 - x0 * y1 * z1;
 	result.y = x0 * y1 * z0 + x1 * y0 * z1;
@@ -2513,8 +2513,8 @@ RMAPI Vector3 QuaternionToEuler(const Quaternion q)
 	Vector3 result = {0};
 
 	// Roll (x-axis rotation)
-	float x0 = 2.0f * (q.w * q.x + q.y * q.z);
-	float x1 = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
+	const float x0 = 2.0f * (q.w * q.x + q.y * q.z);
+	const float x1 = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
 	result.x = atan2f(x0, x1);
 
 	// Pitch (y-axis rotation)
@@ -2524,8 +2524,8 @@ RMAPI Vector3 QuaternionToEuler(const Quaternion q)
 	result.y = asinf(y0);
 
 	// Yaw (z-axis rotation)
-	float z0 = 2.0f * (q.w * q.z + q.x * q.y);
-	float z1 = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
+	const float z0 = 2.0f * (q.w * q.z + q.x * q.y);
+	const float z1 = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
 	result.z = atan2f(z0, z1);
 
 	return result;
@@ -2551,7 +2551,7 @@ RMAPI int QuaternionEquals(const Quaternion p, const Quaternion q)
     #define EPSILON 0.000001f
 #endif
 
-	int result = (((fabsf(p.x - q.x)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.x), fabsf(q.x))))) &&
+	const int result = (((fabsf(p.x - q.x)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.x), fabsf(q.x))))) &&
 	              ((fabsf(p.y - q.y)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.y), fabsf(q.y))))) &&
 	              ((fabsf(p.z - q.z)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.z), fabsf(q.z))))) &&
 	              ((fabsf(p.w - q.w)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(p.w), fabsf(q.w)))))) ||
@@ -2587,13 +2587,13 @@ RMAPI void MatrixDecompose(Matrix mat, Vector3 *translation, Quaternion *rotatio
 
 	// Extract scale
 	const float det = a * A + b * B + c * C;
-	Vector3     abc = {a, b, c};
-	Vector3     def = {d, e, f};
-	Vector3     ghi = {g, h, i};
+	const Vector3     abc = {a, b, c};
+	const Vector3     def = {d, e, f};
+	const Vector3     ghi = {g, h, i};
 
-	float   scalex = Vector3Length(abc);
-	float   scaley = Vector3Length(def);
-	float   scalez = Vector3Length(ghi);
+	const float   scalex = Vector3Length(abc);
+	const float   scaley = Vector3Length(def);
+	const float   scalez = Vector3Length(ghi);
 	Vector3 s      = {scalex, scaley, scalez};
 
 	if (det < 0)

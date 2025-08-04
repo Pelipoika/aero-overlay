@@ -1,5 +1,27 @@
 #include "SharedMemoryClient.h"
 #include "developer_console.h"
+#include "SharedMemoryUtils.h"
+#include "WindowsHandleRAII.h"
+
+#include <sstream>
+
+using namespace SharedMemoryConstants;
+using namespace SharedMemoryErrors;
+
+namespace
+{
+	// Validate buffer positions to prevent corruption
+	bool ValidateBufferPositions(const size_t head, const size_t tail, const size_t bufferSize)
+	{
+		return head < bufferSize && tail < bufferSize;
+	}
+
+	// Check if read operation would wrap around buffer
+	bool WillWrapBuffer(const size_t offset, const size_t size, const size_t bufferSize)
+	{
+		return (offset + size) > bufferSize;
+	}
+}
 
 SharedMemoryClient::~SharedMemoryClient()
 {
@@ -8,138 +30,124 @@ SharedMemoryClient::~SharedMemoryClient()
 
 bool SharedMemoryClient::Start(std::atomic<bool> &running, rlFPCamera &camera)
 {
-	// Reset the stop thread flag at the beginning
-	m_stopThread = false;
-
-	// Initialize the last world update time
+	// Reset state
+	m_stopThread          = false;
 	m_lastWorldUpdateTime = std::chrono::steady_clock::now();
+	m_currentTime         = 0.0f;
 
 	// Clear any existing draw commands from previous sessions
 	ClearDrawCommands();
 
-	// Reset current time
-	m_currentTime = 0.0f;
-
-	// 1. Open the event used for signaling.
-	m_hEvent = OpenEventW(SYNCHRONIZE, FALSE, EVENT_NAME);
-	if (m_hEvent == nullptr)
+	if (!InitializeSharedMemoryResources())
 	{
-		const DWORD error    = GetLastError();
-		std::string errorMsg = "Client: OpenEvent failed, GLE=" + std::to_string(error);
-		switch (error)
-		{
-			case ERROR_FILE_NOT_FOUND:
-				errorMsg += " (Event not found - server may not be running)";
-				break;
-			case ERROR_ACCESS_DENIED:
-				errorMsg += " (Access denied - insufficient permissions)";
-				break;
-			default:
-				break;
-		}
-		errorMsg += ". Is the server running?";
-		DEV_LOG_ERROR(errorMsg);
 		return false;
 	}
 
-	// 2. Open the file mapping object.
-	m_hMapFile = OpenFileMappingW(
-	                              FILE_MAP_ALL_ACCESS, // Read-only access
-	                              FALSE,               // Do not inherit the name
-	                              SHARED_MEM_NAME      // Name of mapping object
-	                             );
-
-	if (m_hMapFile == nullptr)
+	if (!InitializeBufferSynchronization())
 	{
-		const DWORD error    = GetLastError();
-		std::string errorMsg = "Client: OpenFileMapping failed, GLE=" + std::to_string(error);
-		switch (error)
-		{
-			case ERROR_FILE_NOT_FOUND:
-				errorMsg += " (Shared memory not found - server may not be running)";
-				break;
-			case ERROR_ACCESS_DENIED:
-				errorMsg += " (Access denied - insufficient permissions)";
-				break;
-			default:
-				break;
-		}
-		DEV_LOG_ERROR(errorMsg);
 		Stop();
 		return false;
 	}
 
-	// 3. Map the view of the file.
-	m_pSharedMem = static_cast<SharedMemoryLayout*>(MapViewOfFile(
-	                                                              m_hMapFile,
-	                                                              FILE_MAP_ALL_ACCESS,
-	                                                              0,
-	                                                              0,
-	                                                              sizeof(SharedMemoryLayout)
-	                                                             ));
-
-	if (m_pSharedMem == nullptr)
+	if (!StartWorkerThread(running, camera))
 	{
-		const DWORD error    = GetLastError();
-		std::string errorMsg = "Client: MapViewOfFile failed, GLE=" + std::to_string(error);
-		switch (error)
-		{
-			case ERROR_ACCESS_DENIED:
-				errorMsg += " (Access denied - permission mismatch or insufficient privileges)";
-				break;
-			case ERROR_INVALID_PARAMETER:
-				errorMsg += " (Invalid parameter - size or offset issue)";
-				break;
-			case ERROR_NOT_ENOUGH_MEMORY:
-				errorMsg += " (Not enough memory)";
-				break;
-			default:
-				break;
-		}
-		DEV_LOG_ERROR(errorMsg);
 		Stop();
 		return false;
 	}
 
-	// 4. Initialize client buffer position to match server's tail
-	// This ensures we start reading from the correct position
-	if (m_pSharedMem)
-	{
-		// Validate buffer state first
-		size_t currentHead = m_pSharedMem->head;
-		size_t currentTail = m_pSharedMem->tail;
+	LogError(ErrorInfo(ErrorSeverity::Info, "Client: Connected to shared memory successfully"));
+	return true;
+}
 
-		// Check if head/tail positions are valid
-		if (currentHead >= SHARED_MEM_BUFFER_SIZE || currentTail >= SHARED_MEM_BUFFER_SIZE)
-		{
-			DEV_LOG_WARNING("Client: Invalid buffer positions detected (head: " + std::to_string(currentHead) +
-			                ", tail: " + std::to_string(currentTail) + "). Resetting to 0.");
-			m_pSharedMem->head = 0;
-			m_pSharedMem->tail = 0;
-		}
-		else
-		{
-			// Set our tail to the server's current head to start fresh
-			m_pSharedMem->tail = currentHead;
-			DEV_LOG_INFO("Client: Synchronized buffer position - head: " + std::to_string(currentHead) +
-			             ", tail: " + std::to_string(currentHead) + " (synchronized)");
-		}
+bool SharedMemoryClient::InitializeSharedMemoryResources()
+{
+	// Open the event used for signaling
+	WindowsHandleRAII eventHandle(OpenEventW(SYNCHRONIZE, FALSE, EVENT_NAME));
+	if (!eventHandle)
+	{
+		const DWORD       error    = GetLastError();
+		const std::string errorMsg = FormatConnectionError("Client: OpenEvent", error) + ". Is the server running?";
+		LogError(ErrorInfo(ErrorSeverity::Error, errorMsg, error));
+		return false;
 	}
 
-	// 5. Start the worker thread.
+	// Open the file mapping object
+	WindowsHandleRAII mapFileHandle(OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, SHARED_MEM_NAME));
+	if (!mapFileHandle)
+	{
+		const DWORD       error    = GetLastError();
+		const std::string errorMsg = FormatConnectionError("Client: OpenFileMapping", error);
+		LogError(ErrorInfo(ErrorSeverity::Error, errorMsg, error));
+		return false;
+	}
+
+	// Map the view of the file
+	SharedMemoryViewRAII sharedMemView(MapViewOfFile(mapFileHandle, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(SharedMemoryLayout)));
+	if (!sharedMemView)
+	{
+		const DWORD       error    = GetLastError();
+		const std::string errorMsg = FormatConnectionError("Client: MapViewOfFile", error);
+		LogError(ErrorInfo(ErrorSeverity::Error, errorMsg, error));
+		return false;
+	}
+
+	// All resources successfully initialized, transfer ownership
+	m_hEvent     = eventHandle.release();
+	m_hMapFile   = mapFileHandle.release();
+	m_pSharedMem = sharedMemView.as<SharedMemoryLayout>();
+	sharedMemView.release(); // Don't auto-unmap, we'll manage it manually now
+
+	return true;
+}
+
+bool SharedMemoryClient::InitializeBufferSynchronization() const
+{
+	if (!m_pSharedMem)
+	{
+		LogError(ErrorInfo(ErrorSeverity::Fatal, "Client: Shared memory not initialized"));
+		return false;
+	}
+
+	// Use atomic operations for thread-safe buffer position reading
+	const size_t currentHead = m_pSharedMem->head;
+	const size_t currentTail = m_pSharedMem->tail;
+
+	if (!ValidateBufferPositions(currentHead, currentTail, SHARED_MEM_BUFFER_SIZE))
+	{
+		const std::string errorMsg = FormatBufferError("Invalid buffer positions detected",
+		                                               std::max(currentHead, currentTail));
+		LogError(ErrorInfo(ErrorSeverity::Warning, errorMsg));
+
+		// Reset buffer positions safely
+		m_pSharedMem->head = 0;
+		m_pSharedMem->tail = 0;
+	}
+	else
+	{
+		// Set our tail to the server's current head to start fresh
+		m_pSharedMem->tail = currentHead;
+
+		std::ostringstream oss;
+		oss << "Client: Synchronized buffer position - head: " << currentHead << ", tail: " << currentHead << " (synchronized)";
+		LogError(ErrorInfo(ErrorSeverity::Info, oss.str()));
+	}
+
+	return true;
+}
+
+bool SharedMemoryClient::StartWorkerThread(std::atomic<bool> &running, rlFPCamera &camera)
+{
 	try
 	{
 		m_clientThread = std::thread(&SharedMemoryClient::ClientThreadWorker, this, std::ref(running), std::ref(camera));
+		return true;
 	}
 	catch (const std::exception &e)
 	{
-		DEV_LOG_ERROR("Failed to start client thread: " + std::string(e.what()));
-		Stop();
+		const std::string errorMsg = "Failed to start client thread: " + std::string(e.what());
+		LogError(ErrorInfo(ErrorSeverity::Fatal, errorMsg));
 		return false;
 	}
-
-	DEV_LOG_INFO("Client: Connected to shared memory successfully");
-	return true;
 }
 
 void SharedMemoryClient::Stop()
@@ -147,7 +155,7 @@ void SharedMemoryClient::Stop()
 	// Set stop flag first to signal worker thread to exit
 	m_stopThread = true;
 
-	// Signal the event to make sure the worker thread is not stuck waiting.
+	// Signal the event to make sure the worker thread is not stuck waiting
 	if (m_hEvent)
 	{
 		SetEvent(m_hEvent);
@@ -159,140 +167,172 @@ void SharedMemoryClient::Stop()
 		m_clientThread.join();
 	}
 
+	// Clean up resources using RAII for exception safety
+	CleanupResources();
+
+	// Clear state
+	ClearDrawCommands();
+	ResetTimingState();
+}
+
+void SharedMemoryClient::CleanupResources() noexcept
+{
 	// Clean up shared memory mapping
-	if (m_pSharedMem != nullptr)
+	if (m_pSharedMem)
 	{
 		UnmapViewOfFile(m_pSharedMem);
 		m_pSharedMem = nullptr;
 	}
 
-	// Clean up file mapping handle
-	if (m_hMapFile != nullptr)
+	// Clean up handles
+	if (m_hMapFile)
 	{
 		CloseHandle(m_hMapFile);
 		m_hMapFile = nullptr;
 	}
 
-	// Clean up event handle
-	if (m_hEvent != nullptr)
+	if (m_hEvent)
 	{
 		CloseHandle(m_hEvent);
 		m_hEvent = nullptr;
 	}
-
-	// Clear any remaining draw commands
-	ClearDrawCommands();
-
-	// Reset timing state
-	m_currentTime         = 0.0f;
-	m_lastWorldUpdateTime = std::chrono::steady_clock::now();
-
-	// Note: m_stopThread will be reset to false in Start() when reconnecting
 }
 
-/**
- * \brief A safe helper function to read data from the circular buffer, handling wrapping correctly.
- * \param dest A pointer to the destination buffer.
- * \param offset The starting position in the shared buffer to read from.
- * \param size The number of bytes to read.
- */
+void SharedMemoryClient::ResetTimingState() noexcept
+{
+	m_currentTime         = 0.0f;
+	m_lastWorldUpdateTime = std::chrono::steady_clock::now();
+}
+
 void SharedMemoryClient::ReadFromBuffer(void *dest, const size_t offset, const size_t size) const
 {
-	const size_t endPos = offset + size;
-	auto *       dst    = static_cast<std::byte*>(dest);
-
-	if (endPos > SHARED_MEM_BUFFER_SIZE)
+	if (!dest || !m_pSharedMem || size == 0)
 	{
-		// Data wraps around the buffer, requiring two copies.
+		return;
+	}
+
+	auto *dst = static_cast<std::byte*>(dest);
+
+	if (WillWrapBuffer(offset, size, SHARED_MEM_BUFFER_SIZE))
+	{
+		// Data wraps around the buffer, requiring two copies
 		const size_t firstPartSize = SHARED_MEM_BUFFER_SIZE - offset;
-		memcpy(dst, m_pSharedMem->buffer + offset, firstPartSize);
-		memcpy(dst + firstPartSize, m_pSharedMem->buffer, size - firstPartSize);
+		std::memcpy(dst, m_pSharedMem->buffer + offset, firstPartSize);
+		std::memcpy(dst + firstPartSize, m_pSharedMem->buffer, size - firstPartSize);
 	}
 	else
 	{
-		// Data is contiguous and can be read in a single copy.
-		memcpy(dst, m_pSharedMem->buffer + offset, size);
+		// Data is contiguous and can be read in a single copy
+		std::memcpy(dst, m_pSharedMem->buffer + offset, size);
 	}
 }
 
 void SharedMemoryClient::ClientThreadWorker(const std::atomic<bool> &running, rlFPCamera &camera)
 {
-	DEV_LOG_INFO("Client worker thread started");
+	LogError(ErrorInfo(ErrorSeverity::Info, "Client worker thread started"));
 
 	while (running && !m_stopThread && m_pSharedMem)
 	{
-		// Wait for the server to signal that new data is available.
-		const DWORD waitResult = WaitForSingleObject(m_hEvent, 30); // 30ms timeout
+		// Wait for the server to signal that new data is available
+		const DWORD waitResult = WaitForSingleObject(m_hEvent, WAIT_TIMEOUT_MS);
 
 		if (waitResult != WAIT_OBJECT_0)
 		{
-			// Check if we haven't received a world update in 5 seconds
 			CheckWorldUpdateTimeout();
-			continue; // Timeout or error, loop again.
+			continue;
 		}
 
-		// Use a memory barrier to ensure we see the head value that was set *after*
-		// the server finished writing the data.
-		_ReadBarrier();
-
-		size_t head = m_pSharedMem->head;
-		size_t tail = m_pSharedMem->tail;
-
-		// Process all available packets
-		while (tail != head && !m_stopThread)
-		{
-			// Read packet header using the safe helper function. This prevents a buffer
-			// over-read if the header itself wraps around the end of the buffer.
-			PacketHeader header;
-			ReadFromBuffer(&header, tail, sizeof(header));
-
-			const uint32_t totalPacketSize = sizeof(PacketHeader) + header.size;
-
-			// If the packet size is nonsensical,
-			// the buffer is likely corrupted. We can try to recover by skipping all data.
-			if (totalPacketSize > SHARED_MEM_BUFFER_SIZE)
-			{
-				DEV_LOG_ERROR("Client: Corrupted packet detected (size too large: " + std::to_string(totalPacketSize) +
-				              "). Flushing buffer.");
-				m_pSharedMem->tail = head; // Skip all pending data.
-				break;
-			}
-
-			// Additional safety check for packet header validity
-			if (header.size > SHARED_MEM_BUFFER_SIZE)
-			{
-				DEV_LOG_ERROR("Client: Invalid packet header size: " + std::to_string(header.size) +
-				              ". Skipping packet.");
-				// Skip just this packet
-				tail               = (tail + sizeof(PacketHeader)) & (SHARED_MEM_BUFFER_SIZE - 1);
-				m_pSharedMem->tail = tail;
-				continue;
-			}
-
-			const size_t dataStart = (tail + sizeof(PacketHeader)) & (SHARED_MEM_BUFFER_SIZE - 1);
-
-			// Read packet data
-			std::vector<std::byte> dataBuffer(header.size);
-			if (header.size > 0)
-			{
-				ReadFromBuffer(dataBuffer.data(), dataStart, header.size);
-			}
-
-			// Process the packet we just read
-			ProcessPacket(header, dataBuffer.data(), camera);
-
-			// Atomically update the tail to release the space back to the server.
-			tail               = (tail + totalPacketSize) & (SHARED_MEM_BUFFER_SIZE - 1);
-			m_pSharedMem->tail = tail;
-
-			// Re-read head for the next iteration in case the server wrote more data
-			// while we were processing this packet.
-			_ReadBarrier();
-			head = m_pSharedMem->head;
-		}
+		ProcessAvailablePackets(camera);
 	}
 
-	DEV_LOG_INFO("Client worker thread finished");
+	LogError(ErrorInfo(ErrorSeverity::Info, "Client worker thread finished"));
+}
+
+void SharedMemoryClient::ProcessAvailablePackets(rlFPCamera &camera)
+{
+	// Use memory barrier to ensure we see the head value that was set after
+	// the server finished writing the data
+	_ReadBarrier();
+
+	size_t head = m_pSharedMem->head;
+	size_t tail = m_pSharedMem->tail;
+
+	// Validate positions before processing
+	if (!ValidateBufferPositions(head, tail, SHARED_MEM_BUFFER_SIZE))
+	{
+		LogError(ErrorInfo(ErrorSeverity::Error, "Invalid buffer positions detected during processing"));
+		return;
+	}
+
+	// Process all available packets
+	while (tail != head && !m_stopThread)
+	{
+		if (!ProcessSinglePacket(tail, head, camera))
+		{
+			break; // Error occurred or buffer corrupted
+		}
+
+		// Re-read head for the next iteration in case the server wrote more data
+		_ReadBarrier();
+		head = m_pSharedMem->head;
+	}
+}
+
+bool SharedMemoryClient::ProcessSinglePacket(size_t &tail, size_t head, rlFPCamera &camera)
+{
+	// Read packet header using the safe helper function
+	PacketHeader header;
+	ReadFromBuffer(&header, tail, sizeof(header));
+
+	const uint32_t totalPacketSize = sizeof(PacketHeader) + header.size;
+
+	// Validate packet size
+	if (!ValidatePacketSize(totalPacketSize, header.size))
+	{
+		return false; // Buffer corruption detected
+	}
+
+	// Pre-allocate buffer for better performance
+	std::vector<std::byte> dataBuffer;
+	dataBuffer.reserve(header.size);
+	dataBuffer.resize(header.size);
+
+	if (header.size > 0)
+	{
+		const size_t dataStart = (tail + sizeof(PacketHeader)) & (SHARED_MEM_BUFFER_SIZE - 1);
+		ReadFromBuffer(dataBuffer.data(), dataStart, header.size);
+	}
+
+	// Process the packet
+	ProcessPacket(header, dataBuffer.data(), camera);
+
+	// Atomically update the tail to release the space back to the server
+	tail               = (tail + totalPacketSize) & (SHARED_MEM_BUFFER_SIZE - 1);
+	m_pSharedMem->tail = tail;
+
+	return true;
+}
+
+bool SharedMemoryClient::ValidatePacketSize(const uint32_t totalPacketSize, const uint32_t dataSize) const
+{
+	if (totalPacketSize > SHARED_MEM_BUFFER_SIZE)
+	{
+		const std::string errorMsg = FormatBufferError("Corrupted packet detected (total size too large)", totalPacketSize);
+		LogError(ErrorInfo(ErrorSeverity::Error, errorMsg));
+
+		// Reset buffer to recover from corruption
+		m_pSharedMem->tail = m_pSharedMem->head;
+		return false;
+	}
+
+	if (dataSize > MAX_REASONABLE_PACKET_SIZE)
+	{
+		const std::string errorMsg = FormatBufferError("Invalid packet data size", dataSize);
+		LogError(ErrorInfo(ErrorSeverity::Error, errorMsg));
+		return false;
+	}
+
+	return true;
 }
 
 void SharedMemoryClient::ProcessPacket(const PacketHeader &header, const std::byte *data, rlFPCamera &camera)
@@ -300,68 +340,89 @@ void SharedMemoryClient::ProcessPacket(const PacketHeader &header, const std::by
 	switch (header.type)
 	{
 		case PacketType::DRAW_COMMAND:
-		{
-			if (header.size != sizeof(DrawCommandPacket))
-			{
-				DEV_LOG_ERROR("Client: Received DRAW_COMMAND with incorrect size. Expected " +
-				              std::to_string(sizeof(DrawCommandPacket)) + ", got " + std::to_string(header.size));
-				break;
-			}
-
-			std::lock_guard lock(m_drawMutex);
-			if (m_drawCommands.size() > MAX_DRAW_COMMANDS)
-			{
-				m_drawCommands.erase(m_drawCommands.begin());
-			}
-			m_drawCommands.push_back(*reinterpret_cast<const DrawCommandPacket*>(data));
+			ProcessDrawCommand(header, data);
 			break;
-		}
 		case PacketType::WORLD_UPDATE:
-		{
-			if (header.size != sizeof(WorldUpdatePacket))
-			{
-				DEV_LOG_ERROR("Client: Received WORLD_UPDATE with incorrect size. Expected " +
-				              std::to_string(sizeof(WorldUpdatePacket)) + ", got " + std::to_string(header.size));
-				break;
-			}
-
-			const auto &worldUpdate = *reinterpret_cast<const WorldUpdatePacket*>(data);
-
-			// Update the last world update timestamp
-			m_lastWorldUpdateTime = std::chrono::steady_clock::now();
-
-			if (std::fabs(worldUpdate.curtime - m_currentTime) > 1.f)
-			{
-				// Got a large time jump, clear all commands.
-				DEV_LOG_INFO("Client: Time jump detected (from " + std::to_string(m_currentTime) +
-				             " to " + std::to_string(worldUpdate.curtime) + "), clearing draw commands");
-				ClearDrawCommands();
-			}
-
-			m_currentTime = worldUpdate.curtime;
-
-			ExpireOldCommands();
-
-			rlFPCameraSetPosition(&camera, worldUpdate.origin.ToRayLib());
-			rlFPCameraSetFOV(&camera, worldUpdate.fov);
-
-			camera.ViewAngles = {
-				.x = -worldUpdate.viewAngles.y * DEG2RAD,
-				.y = worldUpdate.viewAngles.x * DEG2RAD,
-			};
+			ProcessWorldUpdate(header, data, camera);
 			break;
-		}
 		case PacketType::CLEAR_ALL_DRAWINGS:
-		{
 			ClearDrawCommands();
 			break;
-		}
 		default:  // NOLINT(clang-diagnostic-covered-switch-default)
 		{
-			DEV_LOG_WARNING("Client: Unknown packet type " + std::to_string(static_cast<std::uint8_t>(header.type)));
+			std::ostringstream oss;
+			oss << "Client: Unknown packet type " << static_cast<std::uint8_t>(header.type);
+			LogError(ErrorInfo(ErrorSeverity::Warning, oss.str()));
 			break;
 		}
 	}
+}
+
+void SharedMemoryClient::ProcessDrawCommand(const PacketHeader &header, const std::byte *data)
+{
+	if (header.size != sizeof(DrawCommandPacket))
+	{
+		std::ostringstream oss;
+		oss << "Client: Received DRAW_COMMAND with incorrect size. Expected " << sizeof(DrawCommandPacket) << ", got " << header.size;
+		LogError(ErrorInfo(ErrorSeverity::Error, oss.str()));
+		return;
+	}
+
+	std::lock_guard lock(m_drawMutex);
+
+	// Prevent excessive memory usage with more efficient removal
+	if (m_drawCommands.size() >= MAX_DRAW_COMMANDS)
+	{
+		// Remove multiple oldest commands to prevent frequent reallocations
+		const size_t removeCount = std::min(static_cast<size_t>(100), m_drawCommands.size() / 4);
+		m_drawCommands.erase(m_drawCommands.begin(), m_drawCommands.begin() + removeCount);
+	}
+
+	m_drawCommands.emplace_back(*reinterpret_cast<const DrawCommandPacket*>(data));
+}
+
+void SharedMemoryClient::ProcessWorldUpdate(const PacketHeader &header, const std::byte *data, rlFPCamera &camera)
+{
+	if (header.size != sizeof(WorldUpdatePacket))
+	{
+		std::ostringstream oss;
+		oss << "Client: Received WORLD_UPDATE with incorrect size. Expected " << sizeof(WorldUpdatePacket) << ", got " << header.size;
+		LogError(ErrorInfo(ErrorSeverity::Error, oss.str()));
+		return;
+	}
+
+	const auto &worldUpdate = *reinterpret_cast<const WorldUpdatePacket*>(data);
+
+	// Update the last world update timestamp
+	m_lastWorldUpdateTime = std::chrono::steady_clock::now();
+
+	// Check for time jumps that indicate a new session or significant time skip
+	if (std::abs(worldUpdate.curtime - m_currentTime) > TIME_JUMP_THRESHOLD)
+	{
+		std::ostringstream oss;
+		oss << "Client: Time jump detected (from " << m_currentTime << " to " << worldUpdate.curtime << "), clearing draw commands";
+		LogError(ErrorInfo(ErrorSeverity::Info, oss.str()));
+		ClearDrawCommands();
+	}
+
+	m_currentTime = worldUpdate.curtime;
+
+	// Remove expired commands based on new current time
+	ExpireOldCommands();
+
+	// Update camera state
+	UpdateCameraFromWorldState(worldUpdate, camera);
+}
+
+void SharedMemoryClient::UpdateCameraFromWorldState(const WorldUpdatePacket &worldUpdate, rlFPCamera &camera)
+{
+	rlFPCameraSetPosition(&camera, worldUpdate.origin.ToRayLib());
+	rlFPCameraSetFOV(&camera, worldUpdate.fov);
+
+	camera.ViewAngles = {
+		.x = -worldUpdate.viewAngles.y * DEG2RAD,
+		.y = worldUpdate.viewAngles.x * DEG2RAD,
+	};
 }
 
 std::vector<DrawCommandPacket> SharedMemoryClient::GetDrawCommands()
@@ -372,7 +433,11 @@ std::vector<DrawCommandPacket> SharedMemoryClient::GetDrawCommands()
 
 bool SharedMemoryClient::IsConnected() const
 {
-	return m_hMapFile != nullptr && m_hEvent != nullptr && m_pSharedMem != nullptr && m_clientThread.joinable();
+	return m_hMapFile != nullptr &&
+	       m_hEvent != nullptr &&
+	       m_pSharedMem != nullptr &&
+	       m_clientThread.joinable() &&
+	       !m_stopThread;
 }
 
 void SharedMemoryClient::ClearDrawCommands()
@@ -381,10 +446,11 @@ void SharedMemoryClient::ClearDrawCommands()
 
 	if (!m_drawCommands.empty())
 	{
-		DEV_LOG_INFO("Client: Clearing " + std::to_string(m_drawCommands.size()) + " draw commands");
+		std::ostringstream oss;
+		oss << "Client: Clearing " << m_drawCommands.size() << " draw commands";
+		LogError(ErrorInfo(ErrorSeverity::Info, oss.str()));
+		m_drawCommands.clear();
 	}
-
-	m_drawCommands.clear();
 }
 
 void SharedMemoryClient::ExpireOldCommands()
@@ -407,7 +473,7 @@ void SharedMemoryClient::CheckWorldUpdateTimeout()
 
 	if (timeSinceLastUpdate >= WORLD_UPDATE_TIMEOUT)
 	{
-		// Haven't received a world update in 5 seconds, clear all draw commands
+		// Haven't received a world update in the timeout period
 		ClearDrawCommands();
 
 		// Reset the timer to prevent spamming clear operations

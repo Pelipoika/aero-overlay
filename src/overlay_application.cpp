@@ -134,7 +134,7 @@ void OverlayApplication::UpdateTargetWindowBounds()
 		{
 			// Only check every few seconds to avoid spam
 			static auto lastCheck = std::chrono::steady_clock::now();
-			auto        now       = std::chrono::steady_clock::now();
+			const auto        now       = std::chrono::steady_clock::now();
 
 			if (std::chrono::duration_cast<std::chrono::seconds>(now - lastCheck).count() >= 5)
 			{
@@ -187,7 +187,7 @@ void OverlayApplication::UpdateMemoryClientConnection()
 		return;
 
 	// Check current connection status
-	bool currentlyConnected = m_memoryClient->IsConnected();
+	const bool currentlyConnected = m_memoryClient->IsConnected();
 
 	// If we lost connection, log it and mark as disconnected
 	if (m_memoryClientConnected && !currentlyConnected)
@@ -205,12 +205,13 @@ void OverlayApplication::UpdateMemoryClientConnection()
 		{
 			DEV_LOG_INFO("Shared memory client is now connected and ready");
 		}
+
 		m_memoryClientConnected = true;
 		return;
 	}
 
 	// Check if enough time has passed since last retry (5 seconds for better responsiveness)
-	auto now = std::chrono::steady_clock::now();
+	const auto now = std::chrono::steady_clock::now();
 	if (std::chrono::duration_cast<std::chrono::seconds>(now - m_lastMemoryClientRetry).count() < 5)
 	{
 		return; // Wait at least 5 seconds between retries
@@ -292,7 +293,7 @@ void OverlayApplication::MainLoop()
 
 		// Update connection status display
 		static bool lastConnectionStatus    = false;
-		bool        currentConnectionStatus = m_memoryClient && m_memoryClient->IsConnected();
+		const bool        currentConnectionStatus = m_memoryClient && m_memoryClient->IsConnected();
 
 		if (currentConnectionStatus != lastConnectionStatus)
 		{

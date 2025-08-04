@@ -174,6 +174,7 @@
     <ClCompile Include="src\overlay_application.cpp" />
     <ClCompile Include="src\overlay_renderer.cpp" />
     <ClCompile Include="src\Raylib\rlFPSCamera.cpp" />
+    <ClCompile Include="src\SharedMemoryUtils.cpp" />
     <ClCompile Include="src\window_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -185,7 +186,9 @@
     <ClInclude Include="include\Raylib\raymath.h" />
     <ClInclude Include="include\Raylib\rlgl.h" />
     <ClInclude Include="include\Raylib\rlFPSCamera.h" />
+    <ClInclude Include="include\SharedMemoryUtils.h" />
     <ClInclude Include="include\win32_minimal.h" />
+    <ClInclude Include="include\WindowsHandleRAII.h" />
     <ClInclude Include="include\window_manager.h" />
     <ClInclude Include="include\SharedDefs.h" />
     <ClInclude Include="include\SharedMemoryClient.h" />

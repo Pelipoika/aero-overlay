@@ -29,7 +29,6 @@ public:
 	static Font GetConsolasFont() { return s_consolasFont; }
 	static bool IsFontLoaded() { return s_fontLoaded; }
 
-	static void RenderDebugInfo();
 	static bool ShouldClose();
 
 private:
