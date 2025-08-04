@@ -280,8 +280,7 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 		}
 		else
 		{
-			const int textWidth = MeasureText(cmd.text.text, static_cast<int>(fontSize));
-			textSize = {static_cast<float>(textWidth), fontSize};
+			textSize = {.x = static_cast<float>(MeasureText(cmd.text.text, static_cast<int>(fontSize))), .y = fontSize};
 		}
 
 		// Calculate horizontal alignment offset
