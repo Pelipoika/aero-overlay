@@ -272,19 +272,55 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 			continue;
 		}
 
-		int textWidth;
+		// Measure text dimensions
+		Vector2 textSize;
 		if (s_fontLoaded)
 		{
-			const Vector2 textSize = MeasureTextEx(s_consolasFont, cmd.text.text, fontSize, 1.0f);
-			textWidth              = static_cast<int>(textSize.x / 2);
+			textSize = MeasureTextEx(s_consolasFont, cmd.text.text, fontSize, 1.0f);
 		}
 		else
 		{
-			textWidth = MeasureText(cmd.text.text, static_cast<int>(fontSize)) / 2;
+			const int textWidth = MeasureText(cmd.text.text, static_cast<int>(fontSize));
+			textSize = {static_cast<float>(textWidth), fontSize};
 		}
 
-		const Vector2 drawPos = {screenPos.x - static_cast<float>(textWidth), screenPos.y};
+		// Calculate horizontal alignment offset
+		float horizontalOffset = 0.0f;
+		switch (cmd.text.horizontalAlignment)
+		{
+			case TextHorizontalAlignment::LEFT:
+				horizontalOffset = 0.0f;
+				break;
+			case TextHorizontalAlignment::CENTER:
+				horizontalOffset = -textSize.x * 0.5f;
+				break;
+			case TextHorizontalAlignment::RIGHT:
+				horizontalOffset = -textSize.x;
+				break;
+		}
 
+		// Calculate vertical alignment offset
+		float verticalOffset = 0.0f;
+		switch (cmd.text.verticalAlignment)
+		{
+			case TextVerticalAlignment::TOP:
+				verticalOffset = 0.0f;
+				break;
+			case TextVerticalAlignment::CENTER:
+				verticalOffset = -textSize.y * 0.5f;
+				break;
+			case TextVerticalAlignment::BOTTOM:
+				verticalOffset = -textSize.y;
+				break;
+		}
+
+		// Apply alignment offsets
+		const Vector2 drawPos = {
+			screenPos.x + horizontalOffset,
+			screenPos.y + verticalOffset
+		};
+
+		// Draw the text
 		if (s_fontLoaded)
 		{
 			DrawTextEx(s_consolasFont, cmd.text.text, drawPos, fontSize, 1.0f, cmd.color);

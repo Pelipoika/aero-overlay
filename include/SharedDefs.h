@@ -33,6 +33,21 @@ constexpr size_t SHARED_MEM_BUFFER_SIZE = static_cast<size_t>(2048) * static_cas
 // --- Packet Definitions ---
 #pragma pack(push, 1)
 
+// Text alignment enums
+enum class TextHorizontalAlignment : std::uint8_t
+{
+	LEFT = 0,
+	CENTER,
+	RIGHT
+};
+
+enum class TextVerticalAlignment : std::uint8_t
+{
+	TOP = 0,
+	CENTER,
+	BOTTOM
+};
+
 enum class DrawCommandType : std::uint8_t
 {
 	LINE,
@@ -88,15 +103,21 @@ struct BBoxCommandData
 
 struct TextCommandData
 {
-	explicit TextCommandData(const Vector &position, const char *msg) : position(position), onscreen(false)
+	explicit TextCommandData(const Vector &                position,
+	                         const char *                  msg,
+	                         const TextHorizontalAlignment hAlign   = TextHorizontalAlignment::LEFT,
+	                         const TextVerticalAlignment   vAlign   = TextVerticalAlignment::CENTER,
+	                         const bool                    onScreen = false) : position(position), onscreen(onScreen), horizontalAlignment(hAlign), verticalAlignment(vAlign)
 	{
 		strncpy_s(text, msg, sizeof(text) - 1);
 		text[sizeof(text) - 1] = '\0'; // Ensure null-termination
 	}
 
-	Vector position;
-	bool   onscreen;
-	char   text[128];
+	Vector                  position;
+	bool                    onscreen;
+	TextHorizontalAlignment horizontalAlignment;
+	TextVerticalAlignment   verticalAlignment;
+	char                    text[128];
 };
 
 struct DrawCommandPacket
