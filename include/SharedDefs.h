@@ -26,6 +26,9 @@ struct QAngle
 constexpr auto SHARED_MEM_NAME = L"CS2DebugOverlay_SharedMem";
 constexpr auto EVENT_NAME      = L"CS2DebugOverlay_NewDataEvent";
 
+// Text buffer size for TextCommandData
+constexpr size_t TEXT_COMMAND_BUFFER_SIZE = 512;
+
 // The size of the circular buffer in shared memory.
 // Must be a power of 2 for efficient bitwise arithmetic on head/tail indices.
 constexpr size_t SHARED_MEM_BUFFER_SIZE = static_cast<size_t>(2048) * static_cast<size_t>(2048); // 4MB
@@ -105,19 +108,21 @@ struct TextCommandData
 {
 	explicit TextCommandData(const Vector &                position,
 	                         const char *                  msg,
+	                         const float                   textSize = 14.0f,
 	                         const TextHorizontalAlignment hAlign   = TextHorizontalAlignment::LEFT,
 	                         const TextVerticalAlignment   vAlign   = TextVerticalAlignment::CENTER,
-	                         const bool                    onScreen = false) : position(position), onscreen(onScreen), horizontalAlignment(hAlign), verticalAlignment(vAlign)
+	                         const bool                    onScreen = false) : position(position), onscreen(onScreen), horizontalAlignment(hAlign), verticalAlignment(vAlign), fontSize(textSize)
 	{
-		strncpy_s(text, msg, sizeof(text) - 1);
-		text[sizeof(text) - 1] = '\0'; // Ensure null-termination
+		strncpy_s(text, msg, TEXT_COMMAND_BUFFER_SIZE - 1);
+		text[TEXT_COMMAND_BUFFER_SIZE - 1] = '\0'; // Ensure null-termination
 	}
 
 	Vector                  position;
 	bool                    onscreen;
 	TextHorizontalAlignment horizontalAlignment;
 	TextVerticalAlignment   verticalAlignment;
-	char                    text[128];
+	float                   fontSize;
+	char                    text[TEXT_COMMAND_BUFFER_SIZE];
 };
 
 struct DrawCommandPacket

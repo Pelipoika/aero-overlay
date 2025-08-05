@@ -12,7 +12,7 @@ namespace Config
 
 	// Rendering settings
 	constexpr size_t MAX_DRAW_COMMANDS = 20000;
-	constexpr int    DEBUG_TEXT_SIZE   = 14;
+	constexpr int    DEBUG_TEXT_SIZE   = 14; // Default text size when not specified in TextCommandData
 
 	// Debug geometry settings
 	constexpr float DEBUG_CYLINDER_RADIUS = 20.0f;

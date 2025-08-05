@@ -236,7 +236,8 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 			continue;
 		}
 
-		constexpr float fontSize = static_cast<float>(Config::DEBUG_TEXT_SIZE);
+		// Use the fontSize from the TextCommandData instead of hardcoded value
+		const float fontSize = cmd.text.fontSize;
 
 		Vector2 screenPos{};
 		bool    shouldDraw = false;
@@ -273,7 +274,7 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 			continue;
 		}
 
-		// Measure text dimensions
+		// Measure text dimensions using the custom fontSize
 		Vector2 textSize;
 		if (s_fontLoaded)
 		{
@@ -320,7 +321,7 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 			screenPos.y + verticalOffset
 		};
 
-		// Draw the text
+		// Draw the text using the custom fontSize
 		if (s_fontLoaded)
 		{
 			DrawTextEx(s_consolasFont, cmd.text.text, drawPos, fontSize, 1.0f, cmd.color);
