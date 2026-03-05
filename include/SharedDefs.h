@@ -59,6 +59,7 @@ enum class DrawCommandType : std::uint8_t
 	CIRCLE,
 	BBOX,
 	TEXT,
+	BBOX_WIREFRAME,
 };
 
 struct LineCommandData

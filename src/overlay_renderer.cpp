@@ -3,10 +3,6 @@
 #include "config.h"
 #include "developer_console.h"
 
-// Static font members
-Font OverlayRenderer::s_consolasFont = {};
-bool OverlayRenderer::s_fontLoaded   = false;
-
 OverlayRenderer::OverlayRenderer() : m_initialized(false), m_console(nullptr) { }
 
 OverlayRenderer::~OverlayRenderer()
@@ -72,68 +68,6 @@ void OverlayRenderer::Shutdown()
 	}
 }
 
-bool OverlayRenderer::LoadCustomFont()
-{
-	// Try to load Consolas font from system
-	const char *fontPaths[] = {
-		"C:/Windows/Fonts/consola.ttf",  // Windows system font path
-		"./fonts/consola.ttf",           // Local font path
-		"./consola.ttf"                  // Fallback local path
-	};
-
-	for (const char *path : fontPaths)
-	{
-		if (FileExists(path))
-		{
-			s_consolasFont = LoadFontEx(path, Config::CONSOLE_FONT_SIZE, nullptr, 0);
-			if (s_consolasFont.texture.id > 0)
-			{
-				s_fontLoaded = true;
-				DEV_LOG_INFO("Loaded Consolas font from: " + std::string(path));
-
-				return true;
-			}
-
-			DEV_LOG_WARNING("Found font file but failed to load: " + std::string(path));
-		}
-	}
-
-	// Try loading from the default font with a monospace preference
-	int fontChars = 95; // Standard ASCII printable characters
-
-	// Generate default character set
-	int *codepoints = LoadCodepoints(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", &fontChars);
-
-	if (codepoints != nullptr)
-	{
-		s_consolasFont = LoadFontEx("", Config::CONSOLE_FONT_SIZE, codepoints, fontChars);
-		UnloadCodepoints(codepoints);
-
-		if (s_consolasFont.texture.id > 0)
-		{
-			s_fontLoaded = true;
-			DEV_LOG_WARNING("Using default font as Consolas fallback");
-			return true;
-		}
-	}
-
-	// Final fallback - use default font
-	s_consolasFont = GetFontDefault();
-	s_fontLoaded   = false;
-	DEV_LOG_ERROR("Failed to load any custom font, using system default");
-	return false;
-}
-
-void OverlayRenderer::UnloadCustomFont()
-{
-	if (s_fontLoaded)
-	{
-		UnloadFont(s_consolasFont);
-		s_fontLoaded = false;
-		DEV_LOG_INFO("Unloaded custom font");
-	}
-}
-
 void OverlayRenderer::BeginFrame() const
 {
 	if (!m_initialized)
@@ -173,6 +107,11 @@ void OverlayRenderer::RenderCommands(const std::vector<DrawCommandPacket> &comma
 	Render2DCommands(commands, camera);
 }
 
+bool OverlayRenderer::ShouldClose()
+{
+	return WindowShouldClose();
+}
+
 void OverlayRenderer::Render3DCommands(const std::vector<DrawCommandPacket> &commands, const rlFPCamera &camera)
 {
 	rlFPCameraBeginMode3D(&camera);
@@ -205,10 +144,31 @@ void OverlayRenderer::Render3DCommands(const std::vector<DrawCommandPacket> &com
 				DrawCircle3D(center.ToRayLib(), radius, Vector3{xAxis.x, xAxis.y, xAxis.z}, 90.f, cmd.color);
 				break;
 			}
+			case DrawCommandType::BBOX_WIREFRAME:
+			{
+				// Uses DrawCubeWires instead of DrawBoundingBox for better visibility
+				auto [mins, maxs] = cmd.box;
+				DrawBoundingBox({mins.ToRayLib(), maxs.ToRayLib()}, cmd.color);
+				break;
+			}
 			case DrawCommandType::BBOX:
 			{
 				auto [mins, maxs] = cmd.box;
-				DrawBoundingBox({mins.ToRayLib(), maxs.ToRayLib()}, cmd.color);
+
+				// Use DrawCubeV  instead.
+				const Vector center = {
+					.x = (mins.x + maxs.x) * 0.5f,
+					.y = (mins.y + maxs.y) * 0.5f,
+					.z = (mins.z + maxs.z) * 0.5f
+				};
+
+				const Vector size = {
+					.x = maxs.x - mins.x,
+					.y = maxs.y - mins.y,
+					.z = maxs.z - mins.z
+				};
+
+				DrawCubeV(center.ToRayLib(), size.ToRayLib(), cmd.color);
 				break;
 			}
 			case DrawCommandType::TEXT:
@@ -333,7 +293,69 @@ void OverlayRenderer::Render2DCommands(const std::vector<DrawCommandPacket> &com
 	}
 }
 
-bool OverlayRenderer::ShouldClose()
+// Static font members
+Font OverlayRenderer::s_consolasFont = {};
+
+bool OverlayRenderer::s_fontLoaded = false;
+
+bool OverlayRenderer::LoadCustomFont()
 {
-	return WindowShouldClose();
+	// Try to load Consolas font from system
+	const char *fontPaths[] = {
+		"C:/Windows/Fonts/consola.ttf",  // Windows system font path
+		"./fonts/consola.ttf",           // Local font path
+		"./consola.ttf"                  // Fallback local path
+	};
+
+	for (const char *path : fontPaths)
+	{
+		if (FileExists(path))
+		{
+			s_consolasFont = LoadFontEx(path, Config::CONSOLE_FONT_SIZE, nullptr, 0);
+			if (s_consolasFont.texture.id > 0)
+			{
+				s_fontLoaded = true;
+				DEV_LOG_INFO("Loaded Consolas font from: " + std::string(path));
+
+				return true;
+			}
+
+			DEV_LOG_WARNING("Found font file but failed to load: " + std::string(path));
+		}
+	}
+
+	// Try loading from the default font with a monospace preference
+	int fontChars = 95; // Standard ASCII printable characters
+
+	// Generate default character set
+	int *codepoints = LoadCodepoints(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", &fontChars);
+
+	if (codepoints != nullptr)
+	{
+		s_consolasFont = LoadFontEx("", Config::CONSOLE_FONT_SIZE, codepoints, fontChars);
+		UnloadCodepoints(codepoints);
+
+		if (s_consolasFont.texture.id > 0)
+		{
+			s_fontLoaded = true;
+			DEV_LOG_WARNING("Using default font as Consolas fallback");
+			return true;
+		}
+	}
+
+	// Final fallback - use default font
+	s_consolasFont = GetFontDefault();
+	s_fontLoaded   = false;
+	DEV_LOG_ERROR("Failed to load any custom font, using system default");
+	return false;
+}
+
+void OverlayRenderer::UnloadCustomFont()
+{
+	if (s_fontLoaded)
+	{
+		UnloadFont(s_consolasFont);
+		s_fontLoaded = false;
+		DEV_LOG_INFO("Unloaded custom font");
+	}
 }
